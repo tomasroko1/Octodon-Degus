@@ -6,6 +6,7 @@ data/
 # Agente y bitácoras
 .agent/
 *.md
+!README.md
 .gemini/
 
 # Python
