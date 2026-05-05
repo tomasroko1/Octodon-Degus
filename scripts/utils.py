@@ -69,26 +69,41 @@ def firing_map(sesion, tetrodo, neurona):
     # Interpolamos la velocidad exacta en el instante de cada spike
     vel_celula = np.interp(tiempos_celula, pos_t, vel)
     
-    # Descartamos spikes de "Modo Replay/Quieto" (e.g. < 2 cm/s)
+    # Descartamos spikes de "Modo Replay/uieto"
     umbral_velocidad = 2.0 
     mask_movimiento = vel_celula > umbral_velocidad
     tiempos_celula = tiempos_celula[mask_movimiento]
-    print(f"-> disparos tras filtro de velocidad (> {umbral_velocidad} u/s): {len(tiempos_celula)}")
+    print(f"-> disparos tras filtro de velocidad (> {umbral_velocidad} cm/s): {len(tiempos_celula)}")
 
-    # 3. interpolamos para saber la coordenada x,y exacta en el microsegundo del disparo
+    # 3. interpolamos para saber la coordenada x,y aproximada en el microsegundo del disparo
     pos_x_celula = np.interp(tiempos_celula, pos_t, pos_x)
     pos_y_celula = np.interp(tiempos_celula, pos_t, pos_y)
+    
+    # centramos las coordenadas para que el campo vaya de 0 a 90 cm
+    mid_x = (np.nanmax(pos_x) + np.nanmin(pos_x)) / 2
+    mid_y = (np.nanmax(pos_y) + np.nanmin(pos_y)) / 2
+    shift_x = 45 - mid_x
+    shift_y = 45 - mid_y
+    
+    pos_x_plot = pos_x + shift_x
+    pos_y_plot = pos_y + shift_y
+    pos_x_celula_plot = pos_x_celula + shift_x
+    pos_y_celula_plot = pos_y_celula + shift_y
     
     # 4. graficamos
 
     plt.figure(figsize=(9, 9))
     # caminito gris de fondo
-    plt.plot(pos_x, pos_y, color='lightgray', linewidth=1)
+    plt.plot(pos_x_plot, pos_y_plot, color='lightgray', linewidth=1)
     # puntitos rojos donde hubo spike
-    plt.scatter(pos_x_celula, pos_y_celula, color='red', s=10, zorder=5)
+    plt.scatter(pos_x_celula_plot, pos_y_celula_plot, color='red', s=10, zorder=5)
     
     plt.title(f'firing map | sesion {sesion} | tetrodo {tetrodo} | celula {neurona}')
-    plt.axis('equal') # que quede cuadradito
+    
+    plt.xlim(0, 90)
+    plt.ylim(0, 90)
+    
+    plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
     
     file.close()
