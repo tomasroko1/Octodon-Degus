@@ -19,3 +19,10 @@ venv/
 # Otros
 .DS_Store
 Thumbs.db
+
+# Archivos exploratorios a ignorar (solo dejamos utils.py y README)
+Figure_*.png
+*.m
+mapa_posiciones.py
+papers/
+scripts/glm_analysis.py
