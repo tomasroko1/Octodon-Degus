@@ -1,0 +1,20 @@
+# Datos (Archivos pesados de MATLAB y HDF5)
+*.db
+*.db_clnew
+data/
+
+# Agente y bitácoras
+.agent/
+*.md
+.gemini/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# Otros
+.DS_Store
+Thumbs.db
