@@ -1,5 +1,3 @@
-Este repo contiene algunas herramientas desarrolladas para el análisis de datos de degús en python.
-
 ### Análisis Espacial (`firing_map`)
 Dentro de los scripts herramientas (`utils.py`), el método principal es `firing_map(sesion, tetrodo, neurona)`. Este método nos permite visualizar la actividad de una neurona individual durante una sesión en el Open Field (OF). 
 
