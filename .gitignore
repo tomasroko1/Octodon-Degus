@@ -1,26 +1,17 @@
-# Datos (Archivos pesados de MATLAB y HDF5)
 *.db
 *.db_clnew
 data/
-
-# Agente y bitácoras
 .agent/
 *.md
 !README.md
 .gemini/
-
-# Python
 __pycache__/
 *.py[cod]
 *$py.class
 venv/
 .env
-
-# Otros
 .DS_Store
 Thumbs.db
-
-# Archivos exploratorios a ignorar (solo dejamos utils.py y README)
 Figure_*.png
 *.m
 mapa_posiciones.py
