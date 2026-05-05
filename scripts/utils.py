@@ -7,7 +7,6 @@ from scipy.ndimage import gaussian_filter1d
 
 import os
 
-# Configuración de rutas (apuntando a la carpeta data en la raíz)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 
