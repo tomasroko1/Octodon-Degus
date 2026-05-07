@@ -558,40 +558,40 @@ def rate_map(sesion, tetrodo, neurona, n_bins=36, smooth_sigma=1.5, min_tiempo_s
     max_rate = np.nanmax(rate)
     
     # 6. graficar
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    fig, axes = plt.subplots(1, 2, figsize=(9, 4.5))
     
     # Panel izquierdo: firing map
     ax1 = axes[0]
     ax1.plot(pos_x, pos_y, color='black', linewidth=0.3, alpha=0.6)
     ax1.scatter(spk_x, spk_y, color='red', s=8, zorder=5, linewidths=0)
-    ax1.set_xlim(0, 90); ax1.set_ylim(0, 90)
     ax1.set_aspect('equal')
     ax1.axis('off') # Quita el recuadro negro y los números
     
     # Agregar barra de escala superior ("90 cm")
-    ax1.plot([0, 90], [92, 92], color='black', linewidth=3)
-    ax1.text(45, 94, '90 cm', ha='center', va='bottom', fontsize=16)
+    ax1.plot([0, 90], [92, 92], color='black', linewidth=3, clip_on=False)
+    ax1.text(45, 94, '90 cm', ha='center', va='bottom', fontsize=14, clip_on=False)
+    ax1.set_xlim(0, 90); ax1.set_ylim(0, 90)
     
     # Panel derecho: rate map
     ax2 = axes[1]
     ax2.set_facecolor('white')
     mesh = ax2.pcolormesh(bordes, bordes, rate.T, cmap='jet', vmin=0, vmax=max_rate, shading='flat')
-    ax2.set_xlim(0, 90); ax2.set_ylim(0, 90)
     ax2.set_aspect('equal')
     ax2.axis('off') # Quita el recuadro negro
     
     # Texto Max Hz estilo paper (arriba a la derecha)
-    ax2.text(90, 94, f'Max. [Hz]\n{max_rate:.1f}', ha='right', va='bottom', fontsize=16, color='white')
-    ax2.text(90, 92, 'Max. [Hz]', ha='right', va='bottom', fontsize=16, color='black')
-    ax2.text(88, 88, f'{max_rate:.1f}', ha='right', va='top', fontsize=22, color='white')
+    ax2.text(90, 94, f'Max. [Hz]\n{max_rate:.1f}', ha='right', va='bottom', fontsize=14, color='white', clip_on=False)
+    ax2.text(90, 92, 'Max. [Hz]', ha='right', va='bottom', fontsize=14, color='black', clip_on=False)
+    ax2.text(88, 88, f'{max_rate:.1f}', ha='right', va='top', fontsize=18, color='white', clip_on=False)
+    ax2.set_xlim(0, 90); ax2.set_ylim(0, 90)
     
     # Colorbar chica estilo paper
     cbar = fig.colorbar(mesh, ax=ax2, fraction=0.03, pad=0.02, ticks=[0, max_rate])
     cbar.ax.set_yticklabels(['0', 'Max.'])
-    cbar.ax.tick_params(labelsize=14, length=0)
+    cbar.ax.tick_params(labelsize=12, length=0)
     cbar.outline.set_visible(False)
     
-    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.1)
     plt.show()
     firing_map(sesion, tetrodo, neurona)
     
