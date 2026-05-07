@@ -125,10 +125,7 @@ def glm_posicion_manual(sesion, tetrodo, neurona, n_bines=45):
     # Agregamos constante y entrenamos
     X_glm_pos = sm.add_constant(X_bases_pos)
     
-    # ¡AQUÍ ESTABA EL PROBLEMA!
-    # Si el degú nunca pisó la esquina inferior derecha, esa "campana" siempre vale 0 en los datos.
-    # Un GLM puro se vuelve loco y le asigna un peso de 1,000,000 a esa esquina vacía.
-    # Solución: "Regularización" (Ridge). Le decimos al modelo: "Si no tienes datos, mantén el peso cerca de 0".
+    # Solución: "Regularización" (Ridge)
     modelo = sm.GLM(Y, X_glm_pos, family=sm.families.Poisson()).fit_regularized(alpha=0.1, L1_wt=0.0)
     print("¡Modelo entrenado (y regularizado)!")
 
@@ -508,4 +505,4 @@ def rate_map(sesion, tetrodo, neurona, n_bins=36, smooth_sigma=1.5, min_tiempo_s
     cbar.outline.set_visible(False)
     
     plt.tight_layout()
-    plt.show()
+    plt.show()
