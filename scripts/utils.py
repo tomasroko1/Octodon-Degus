@@ -247,12 +247,12 @@ def get_gam_posicion(sesion, tetrodo, neurona, splines=5, bin_size_sec=0.1, forc
 
 def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, bin_size_sec=0.1):
     print("\n--- GRAFICANDO GAM ---")
-    XX_pos = modelo_gam.generate_X_grid(term=0, n=50)
+    XX_pos = modelo_gam.generate_X_grid(term=0, n=36)
     Z_pos = modelo_gam.partial_dependence(term=0, X=XX_pos)
     
-    x_grid = XX_pos[:, 0].reshape(50, 50)
-    y_grid = XX_pos[:, 1].reshape(50, 50)
-    z_grid = Z_pos.reshape(50, 50)
+    x_grid = XX_pos[:, 0].reshape(36, 36)
+    y_grid = XX_pos[:, 1].reshape(36, 36)
+    z_grid = Z_pos.reshape(36, 36)
     
     # 1. Crear una máscara de ocupancia basada en las posiciones reales (X)
     from scipy.spatial import cKDTree
@@ -260,7 +260,7 @@ def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, b
     tree = cKDTree(X)
     # Buscamos la distancia desde cada punto del grid al punto real más cercano
     distancias, _ = tree.query(XX_pos)
-    distancias = distancias.reshape(50, 50)
+    distancias = distancias.reshape(36, 36)
     
     # Si un punto del grid está a más de 5 cm de una pisada real, lo consideramos "no visitado"
     # y lo volvemos NaN para que matplotlib lo dibuje blanco.
@@ -269,12 +269,13 @@ def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, b
     fig = plt.figure(figsize=(7, 6))
     ax = fig.add_subplot(111)
     
-    # 2. Usar pcolormesh en vez de contourf para dar ese look cuadriculado "crudo" de Ulanovsky
+    # 2.
     ax.set_facecolor('white')
     mesh = ax.pcolormesh(x_grid, y_grid, z_grid, cmap='jet', shading='nearest')
     fig.colorbar(mesh, ax=ax, label='Tasa de Disparo (Spikes/Bin)')
     ax.set_title(f'GAM Model | s={sesion} t={tetrodo} c={neurona}')
-    ax.axis('equal')
+    ax.set_aspect('equal')
+    ax.axis('off')
     
     prediccion_tiempo = modelo_gam.predict(X)
     
@@ -295,7 +296,7 @@ def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, b
     plt.show()
 
 
-
+###
 
 
 def preparar_datos_viewpoint_1d(sesion, tetrodo, neurona, bin_size_sec=0.1):
@@ -542,7 +543,7 @@ def rate_map(sesion, tetrodo, neurona, n_bins=36, smooth_sigma=1.5, min_tiempo_s
     # 2. mapa de spikes: cuántos spikes cayeron en cada bin
     spk_counts, _, _ = np.histogram2d(spk_x, spk_y, bins=[bordes, bordes])
     
-    # 3. suavizar ambos mapas ANTES de dividir (estándar en el campo)
+    # 3. suavizar ambos mapas antes de dividir
     ocup_suave = gaussian_filter(ocup_tiempo.astype(float), sigma=smooth_sigma)
     spk_suave  = gaussian_filter(spk_counts.astype(float),  sigma=smooth_sigma)
     
@@ -556,7 +557,7 @@ def rate_map(sesion, tetrodo, neurona, n_bins=36, smooth_sigma=1.5, min_tiempo_s
     
     max_rate = np.nanmax(rate)
     
-    # 6. graficar (estilo paper)
+    # 6. graficar
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     
     # Panel izquierdo: firing map
