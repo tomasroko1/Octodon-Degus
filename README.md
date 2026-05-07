@@ -26,3 +26,16 @@ En otro acercamiento, implementamos un GAM utilizando **Splines** que encuentra 
 
 - **GAM 2**: Es el place field predictivo del GAM. El place field se expresa en este caso como un gradiente suave y continuo, reflejando de manera mucho más natural la verdadera probabilidad espacial de la célula (comparar con modelos lineales).
 ![GAM 2](GAM2.png)
+
+#### Fundamentos del Modelado
+- **Bineado Temporal ($Y$)**: Dado que la cámara de video (posición) y los electrodos (spikes) recogen datos de distinta naturaleza, discretizamos el tiempo en "ventanas" (ej. 100 ms). Esto nos permite construir el vector de spikes por ventana alineado con la trayectoria, generando las filas de entrenamiento necesarias para la Regresión de Poisson.
+- **Validación Cruzada (Gridsearch)**: El GAM utiliza una penalidad matemática ($\lambda$) que se calibra automáticamente. Si se le otorgan muchas funciones base (splines), el *gridsearch* aumenta esta penalidad para aplastarlas, garantizando que la superficie final sea estadísticamente suave e indicando la complejidad real de los datos a través de los Grados de Libertad Efectivos (EDoF).
+- **Miopía Biológica (Límite de Splines)**: Aunque la validación cruzada previene picos de ruido, es "ciega" al comportamiento animal. Si otorgamos demasiados splines (ej. 20x20), el modelo se sobreajustará *al recorrido exacto* del degú en lugar de a la codificación abstracta del hipocampo. Por ello, restringimos el tope de complejidad (ej. `splines=5` o `6`) forzando al modelo a revelar únicamente los verdaderos "Campos de Lugar" biológicos.
+
+#### Interpretación de Métricas del GAM (Ejemplo: Célula candidata con 5x5 splines)
+Al entrenar el modelo, la librería nos devuelve un resumen estadístico. Para la neurona analizada (Sesión 2, Tetrodo 3, Neurona 3), los valores clave para validar su función espacial son:
+
+- **Rank (25)**: Es el número máximo de funciones base que le permitimos usar al modelo ($5 \times 5 = 25$). Actúa como nuestro límite de "miopía biológica".
+- **Effective DoF (14.3)**: Grados de Libertad Efectivos. De las 25 campanas disponibles, el modelo utilizó la complejidad equivalente a ~14 para dibujar el mapa, penalizando y aplanando el resto. Demuestra que encontró una forma estable sin necesidad de usar toda la complejidad disponible.
+- **Pseudo R-Squared (0.4054)**: ¡La métrica estrella! Indica que el **40.5%** de la variabilidad en los disparos de la neurona se explica pura y exclusivamente por la posición (X, Y) del animal. En electrofisiología *in-vivo*, un $R^2$ superior a 0.15 ya es considerado un *Place Cell* excepcionalmente fuerte.
+- **AIC (4814.3)**: Criterio de Información. Útil para comparar modelos relativos a los mismos datos. Modelos sobreajustados (ej. 20x20 splines) pueden dar un AIC engañosamente menor al memorizar las pisadas del degú; aceptamos este valor como el "costo" necesario para obtener una representación biológicamente real.
