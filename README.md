@@ -37,6 +37,7 @@ Al entrenar el modelo, la librería nos devuelve un resumen estadístico. Para l
 
 - **Rank (25)**: Es el número máximo de funciones base que le permitimos usar al modelo ($5 \times 5 = 25$). Actúa como nuestro límite de "miopía biológica".
 - **Effective DoF (14.3)**: Grados de Libertad Efectivos. De las 25 campanas disponibles, el modelo utilizó la complejidad equivalente a ~14 para dibujar el mapa, penalizando y aplanando el resto. Demuestra que encontró una forma estable sin necesidad de usar toda la complejidad disponible.
-- **Pseudo R-Squared (0.4054)**: ¡La métrica estrella! Indica que el **40.5%** de la variabilidad en los disparos de la neurona se explica pura y exclusivamente por la posición (X, Y) del animal. En electrofisiología *in-vivo*, un $R^2$ superior a 0.15 ya es considerado un *Place Cell* excepcionalmente fuerte.
+- **Pseudo R-Squared (0.4054)**: Indica que el **40.5%** de la variabilidad en los disparos de la neurona se explica exclusivamente por la posición (X, Y) del animal.
 - **AIC (4814.3)**: Criterio de Información. Útil para comparar modelos relativos a los mismos datos. Modelos sobreajustados (ej. 20x20 splines) pueden dar un AIC engañosamente menor al memorizar las pisadas del degú; aceptamos este valor como el "costo" necesario para obtener una representación biológicamente real.
-- ![GAM 2_20spl](figures/gam2_20splines.png)
+- Ejemplo:
+![GAM 2_20spl](figures/gam2_20splines.png)
