@@ -254,12 +254,26 @@ def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, b
     y_grid = XX_pos[:, 1].reshape(50, 50)
     z_grid = Z_pos.reshape(50, 50)
     
+    # 1. Crear una máscara de ocupancia basada en las posiciones reales (X)
+    from scipy.spatial import cKDTree
+    # Construimos un árbol KD con las posiciones por las que pasó el animal
+    tree = cKDTree(X)
+    # Buscamos la distancia desde cada punto del grid al punto real más cercano
+    distancias, _ = tree.query(XX_pos)
+    distancias = distancias.reshape(50, 50)
+    
+    # Si un punto del grid está a más de 5 cm de una pisada real, lo consideramos "no visitado"
+    # y lo volvemos NaN para que matplotlib lo dibuje blanco.
+    z_grid[distancias > 5.0] = np.nan
+    
     fig = plt.figure(figsize=(7, 6))
     ax = fig.add_subplot(111)
     
-    contour = ax.contourf(x_grid, y_grid, z_grid, levels=30, cmap='jet')
-    fig.colorbar(contour, ax=ax, label='Tasa de Disparo (Spikes/Bin)')
-    ax.set_title(f'GAM (Splines {splines}x{splines}) | s={sesion} t={tetrodo} c={neurona}')
+    # 2. Usar pcolormesh en vez de contourf para dar ese look cuadriculado "crudo" de Ulanovsky
+    ax.set_facecolor('white')
+    mesh = ax.pcolormesh(x_grid, y_grid, z_grid, cmap='jet', shading='nearest')
+    fig.colorbar(mesh, ax=ax, label='Tasa de Disparo (Spikes/Bin)')
+    ax.set_title(f'GAM Model | s={sesion} t={tetrodo} c={neurona}')
     ax.axis('equal')
     
     prediccion_tiempo = modelo_gam.predict(X)
@@ -444,6 +458,140 @@ def graficar_gam_viewpoint_1d(modelo_gam, X, Y, W, H, sesion, tetrodo, neurona):
     plt.tight_layout()
     plt.show()
 
+def _cargar_datos_neurona(sesion, tetrodo, neurona):
+    """
+    Carga y preprocesa los datos crudos de una neurona.
+    Devuelve: pos_x, pos_y, pos_t, vel, pos_x_spk, pos_y_spk, dt_video
+    (todo ya centrado a 0-90 cm y con filtro de velocidad aplicado a los spikes)
+    """
+    file = h5py.File(db_merged, 'r')
+    
+    # 1. trayectoria del degus
+    nombre_pos = f'pos_{sesion}'
+    pos_x = np.array(file[nombre_pos]['x']).flatten()
+    pos_y = np.array(file[nombre_pos]['y']).flatten()
+    pos_t = np.array(file[nombre_pos]['t']).flatten()
+    
+    ## 1.5 filtro Gaussiano (suavizado de trayectoria)
+    # Ventana biológica estándar: ~300 ms (0.3 segundos)
+    # Suaviza el ruido del tracking de la cámara sin borrar movimientos reales del animal.
+    dt_video = np.mean(np.diff(pos_t)) # segundos por frame
+    sigma_frames = 0.3 / dt_video
+    
+    pos_x = gaussian_filter1d(pos_x, sigma=sigma_frames)
+    pos_y = gaussian_filter1d(pos_y, sigma=sigma_frames)
+
+    ## CALCULO DE VELOCIDAD
+    dx = np.diff(pos_x)
+    dy = np.diff(pos_y)
+    dt = np.maximum(np.diff(pos_t), 1e-6) # evitamos div x0
+    vel = np.append(np.sqrt(dx**2 + dy**2) / dt, 0)
+    
+    # 2. sacamos los spikes de esta neurona
+    nombre_spk = f'spk_ts_{sesion}_{tetrodo}'
+    spikes = np.array(file[nombre_spk][0]).flatten()
+    
+    cluster = all_clust[sesion-1][tetrodo-1]
+    indices_celula = cluster[0][neurona-1].flatten().astype(int) - 1
+    tiempos_celula = spikes[indices_celula]
+    
+    # 3. Encontramos la posición del animal EN EL MOMENTO de cada spike
+    # Interpolamos pos_t para encontrar el frame exacto de cada spike
+    indices_tiempo = np.searchsorted(pos_t, tiempos_celula)
+    indices_tiempo = np.clip(indices_tiempo, 0, len(pos_t) - 1)
+    
+    pos_x_spk = pos_x[indices_tiempo]
+    pos_y_spk = pos_y[indices_tiempo]
+    vel_celula = vel[indices_tiempo]
+    
+    ## SPEED FILTER
+    umbral_velocidad = 2.0  # cm/s (filtro biológico clásico para descartar "grooming" o siestas)
+    mask_movimiento = vel_celula > umbral_velocidad
+    
+    pos_x_spk = pos_x_spk[mask_movimiento]
+    pos_y_spk = pos_y_spk[mask_movimiento]
+    
+    file.close()
+    
+    return pos_x, pos_y, pos_t, vel, pos_x_spk, pos_y_spk, dt_video
+
+def rate_map(sesion, tetrodo, neurona, n_bins=36, smooth_sigma=1.5, min_tiempo_seg=0.1):
+    """    
+    1. Divide el espacio en una grilla de n_bins x n_bins.
+    2. Cuenta spikes por bin y tiempo de ocupación por bin.
+    3. Calcula tasa = spikes / tiempo (Hz).
+    4. Aplica suavizado gaussiano espacial.
+    5. Enmascara en blanco las zonas que el animal no visitó.
+    
+    Parámetros:
+        n_bins:          Cantidad de cuadraditos por lado (default 36 -> ~2.5 cm/bin en caja de 90cm).
+        smooth_sigma:    Sigma del filtro gaussiano 2D aplicado al rate map (en bins).
+        min_tiempo_seg:  Tiempo mínimo de ocupación para considerar un bin como "visitado".
+    """
+    from scipy.ndimage import gaussian_filter
+    
+    pos_x, pos_y, pos_t, vel, spk_x, spk_y, dt_video = _cargar_datos_neurona(sesion, tetrodo, neurona)
+    
+    # definimos los bordes de la grilla
+    bordes = np.linspace(0, 90, n_bins + 1)
+    
+    # 1. mapa de ocupación: cuánto tiempo pasó el animal en cada bin
+    ocup_counts, _, _ = np.histogram2d(pos_x, pos_y, bins=[bordes, bordes])
+    ocup_tiempo = ocup_counts * dt_video  # convertir frames a segundos
+    
+    # 2. mapa de spikes: cuántos spikes cayeron en cada bin
+    spk_counts, _, _ = np.histogram2d(spk_x, spk_y, bins=[bordes, bordes])
+    
+    # 3. suavizar ambos mapas ANTES de dividir (estándar en el campo)
+    ocup_suave = gaussian_filter(ocup_tiempo.astype(float), sigma=smooth_sigma)
+    spk_suave  = gaussian_filter(spk_counts.astype(float),  sigma=smooth_sigma)
+    
+    # 4. calcular tasa de disparo (Hz) = spikes / tiempo
+    rate = np.zeros_like(ocup_suave)
+    mask_visitado = ocup_suave > min_tiempo_seg
+    rate[mask_visitado] = spk_suave[mask_visitado] / ocup_suave[mask_visitado]
+    
+    # 5. enmascarar bins no visitados -> NaN (se dibujan blancos)
+    rate[~mask_visitado] = np.nan
+    
+    max_rate = np.nanmax(rate)
+    
+    # 6. graficar (estilo paper)
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    
+    # Panel izquierdo: firing map
+    ax1 = axes[0]
+    ax1.plot(pos_x, pos_y, color='black', linewidth=0.3, alpha=0.6)
+    ax1.scatter(spk_x, spk_y, color='red', s=8, zorder=5, linewidths=0)
+    ax1.set_xlim(0, 90); ax1.set_ylim(0, 90)
+    ax1.set_aspect('equal')
+    ax1.axis('off') # Quita el recuadro negro y los números
+    
+    # Agregar barra de escala superior ("90 cm")
+    ax1.plot([0, 90], [92, 92], color='black', linewidth=3)
+    ax1.text(45, 94, '90 cm', ha='center', va='bottom', fontsize=16)
+    
+    # Panel derecho: rate map
+    ax2 = axes[1]
+    ax2.set_facecolor('white')
+    mesh = ax2.pcolormesh(bordes, bordes, rate.T, cmap='jet', vmin=0, vmax=max_rate, shading='flat')
+    ax2.set_xlim(0, 90); ax2.set_ylim(0, 90)
+    ax2.set_aspect('equal')
+    ax2.axis('off') # Quita el recuadro negro
+    
+    # Texto Max Hz estilo paper (arriba a la derecha)
+    ax2.text(90, 94, f'Max. [Hz]\n{max_rate:.1f}', ha='right', va='bottom', fontsize=16, color='white')
+    ax2.text(90, 92, 'Max. [Hz]', ha='right', va='bottom', fontsize=16, color='black')
+    ax2.text(88, 88, f'{max_rate:.1f}', ha='right', va='top', fontsize=22, color='white')
+    
+    # Colorbar chica estilo paper
+    cbar = fig.colorbar(mesh, ax=ax2, fraction=0.03, pad=0.02, ticks=[0, max_rate])
+    cbar.ax.set_yticklabels(['0', 'Max.'])
+    cbar.ax.tick_params(labelsize=14, length=0)
+    cbar.outline.set_visible(False)
+    
+    plt.tight_layout()
+    plt.show()
     firing_map(sesion, tetrodo, neurona)
     
 
