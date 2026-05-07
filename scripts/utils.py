@@ -22,53 +22,13 @@ db_clnew = os.path.join(DATA_DIR, 'S2020_MarkIX-OF-V.db_clnew')
 all_clust = sio.loadmat(db_clnew)['all_clust']
 ## lista anidada tipo 'cell' de matlab. se accede: all_clust[sesion][tetrodo][0][celula] -> devuelve un array de índices.
 ## esos indices son la posición en la lista de spikes de los disparon asociados a esa celula.
-
 def firing_map(sesion, tetrodo, neurona):
     """
     Devuelve el mapa con el recorrido y los lugares de disparo
     de una neurona, en un tetrodo, en una sesión.
     """
+    pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
     
-    file = h5py.File(db_merged, 'r')
-    
-    # 1. trayectoria del degus
-    nombre_pos = 'pos_' + str(sesion)
-    pos_x = np.array(file[nombre_pos]['x']).flatten()
-    pos_y = np.array(file[nombre_pos]['y']).flatten()
-    pos_t = np.array(file[nombre_pos]['t']).flatten()
-    
-    ## 1.5 filtro Gaussiano (suavizado de trayectoria)
-
-    # Ventana biológica estándar: ~300 ms (0.3 segundos) ?? REVISAR SIGNIFICADO
-    
-    dt_video = np.mean(np.diff(pos_t)) # segundos por frame
-    sigma_frames = 0.3 / dt_video
-    
-    pos_x = gaussian_filter1d(pos_x, sigma=sigma_frames)
-    pos_y = gaussian_filter1d(pos_y, sigma=sigma_frames)
-
-    ## CALCULO DE VELOCIDAD
-    dx = np.diff(pos_x) # [x2-x1, x3-x2, ........, x_n-1 - x_n]
-    dy = np.diff(pos_y) # [y2-y1, y3-y2, ........, y_n-1 - y_n]
-    dt = np.maximum(np.diff(pos_t), 1e-6) # evitamos div x0
-    # calculamos velocidad y le agregamos un 0 al final para mantener el tamaño del array pos_t
-    vel = np.append(np.sqrt(dx**2 + dy**2) / dt, 0)
-    
-    # 2. sacamos todos los spikes grabados por este tetrodo
-    
-    ## spike timestamps -> TODOS los spikes. después toca separar que spikes son de c/cel. para eso usamos el 2do file despues.
-    nombre_spk = 'spk_ts_' + str(sesion) + '_' + str(tetrodo)
-    spikes = np.array(file[nombre_spk][0]).flatten()
-    
-    idx_sesion = sesion - 1
-    idx_tetrodo = tetrodo - 1
-    idx_celula = neurona - 1
-    
-    cluster = all_clust[idx_sesion][idx_tetrodo]
-    indices_celula = cluster[0][idx_celula].flatten().astype(int) - 1
-    
-    # nos quedamos solo con los tiempos de disparo de nuestra celula -> 'S2020_MarkIX-OF-V.db_clnew'
-    tiempos_celula = spikes[indices_celula]
     print(f"-> graficando s={sesion}, t={tetrodo}, c={neurona}. disparos: {len(tiempos_celula)}")
     
     ## 2.5 FILTRO DE VELOCIDAD (Speed Filter)
@@ -111,8 +71,6 @@ def firing_map(sesion, tetrodo, neurona):
     
     plt.gca().set_aspect('equal', adjustable='box')
     plt.show()
-    
-    file.close()
 
 # --- ejemplos ---
 
@@ -123,26 +81,7 @@ def firing_map(sesion, tetrodo, neurona):
 # firing_map(sesion=2, tetrodo=2, neurona=7)
 
 def preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec):
-    file = h5py.File(db_merged, 'r')
-    
-    # 1. Trayectoria suavizada
-    nombre_pos = f'pos_{sesion}'
-    pos_x = np.array(file[nombre_pos]['x']).flatten()
-    pos_y = np.array(file[nombre_pos]['y']).flatten()
-    pos_t = np.array(file[nombre_pos]['t']).flatten()
-    
-    dt_video = np.mean(np.diff(pos_t))
-
-    sigma_frames = 0.3 / dt_video
-    pos_x = gaussian_filter1d(pos_x, sigma=sigma_frames)
-    pos_y = gaussian_filter1d(pos_y, sigma=sigma_frames)
-    
-    # 2. Spikes
-    nombre_spk = f'spk_ts_{sesion}_{tetrodo}'
-    spikes = np.array(file[nombre_spk][0]).flatten()
-    cluster = all_clust[sesion-1][tetrodo-1]
-    indices_celula = cluster[0][neurona-1].flatten().astype(int) - 1
-    tiempos_celula = spikes[indices_celula]
+    pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
     
     # 3. Binning Temporal
     bins_tiempo = np.arange(pos_t[0], pos_t[-1], bin_size_sec)
@@ -158,7 +97,6 @@ def preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec):
     X = np.column_stack((x_bins, y_bins))
     Y = conteo_spikes
     
-    file.close()
     return X, Y
 
 def glm_posicion_manual(sesion, tetrodo, neurona, n_bines=45):
@@ -304,39 +242,19 @@ def preparar_datos_viewpoint_1d(sesion, tetrodo, neurona, bin_size_sec=0.1):
     Calcula el punto de intersección de la mirada y "desenrolla" la caja 
     en un perímetro 1D continuo (0 a Perímetro Total).
     """
-    file = h5py.File(db_merged, 'r')
-    
-    # 1. Trayectoria suavizada
-    nombre_pos = f'pos_{sesion}'
-    pos_x = np.array(file[nombre_pos]['x']).flatten()
-    pos_y = np.array(file[nombre_pos]['y']).flatten()
-    pos_t = np.array(file[nombre_pos]['t']).flatten()
-    
-    dt_video = np.mean(np.diff(pos_t))
-    sigma_frames = 0.3 / dt_video
-    pos_x = gaussian_filter1d(pos_x, sigma=sigma_frames)
-    pos_y = gaussian_filter1d(pos_y, sigma=sigma_frames)
+    pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
     
     x_min, x_max = np.min(pos_x), np.max(pos_x)
     y_min, y_max = np.min(pos_y), np.max(pos_y)
     W = x_max - x_min
     H = y_max - y_min
     
-    # 2. Velocidad y Dirección
+    # angulo de la mirada
     dx = np.diff(pos_x)
     dy = np.diff(pos_y)
-    dt = np.maximum(np.diff(pos_t), 1e-6)
-    vel = np.append(np.sqrt(dx**2 + dy**2) / dt, 0)
     
     angulo = np.append(np.arctan2(dy, dx), 0)
     angulo = np.unwrap(angulo)
-    
-    # 3. Spikes
-    nombre_spk = f'spk_ts_{sesion}_{tetrodo}'
-    spikes = np.array(file[nombre_spk][0]).flatten()
-    cluster = all_clust[sesion-1][tetrodo-1]
-    indices_celula = cluster[0][neurona-1].flatten().astype(int) - 1
-    tiempos_celula = spikes[indices_celula]
     
     # 4. Binning Temporal
     bins_tiempo = np.arange(pos_t[0], pos_t[-1], bin_size_sec)
@@ -388,7 +306,6 @@ def preparar_datos_viewpoint_1d(sesion, tetrodo, neurona, bin_size_sec=0.1):
     X = p_mirada[mascara_vel].reshape(-1, 1)
     Y = conteo_spikes[mascara_vel]
     
-    file.close()
     return X, Y, W, H
 
 
@@ -461,9 +378,8 @@ def graficar_gam_viewpoint_1d(modelo_gam, X, Y, W, H, sesion, tetrodo, neurona):
 
 def _cargar_datos_neurona(sesion, tetrodo, neurona):
     """
-    Carga y preprocesa los datos crudos de una neurona.
-    Devuelve: pos_x, pos_y, pos_t, vel, pos_x_spk, pos_y_spk, dt_video
-    (todo ya centrado a 0-90 cm y con filtro de velocidad aplicado a los spikes)
+    funcion base de carga. lee hdf5, suaviza trayectoria, extrae spikes.
+    devuelve datos crudos sin centrar ni filtrar por velocidad.
     """
     file = h5py.File(db_merged, 'r')
     
@@ -495,26 +411,10 @@ def _cargar_datos_neurona(sesion, tetrodo, neurona):
     cluster = all_clust[sesion-1][tetrodo-1]
     indices_celula = cluster[0][neurona-1].flatten().astype(int) - 1
     tiempos_celula = spikes[indices_celula]
-    
-    # 3. Encontramos la posición del animal EN EL MOMENTO de cada spike
-    # Interpolamos pos_t para encontrar el frame exacto de cada spike
-    indices_tiempo = np.searchsorted(pos_t, tiempos_celula)
-    indices_tiempo = np.clip(indices_tiempo, 0, len(pos_t) - 1)
-    
-    pos_x_spk = pos_x[indices_tiempo]
-    pos_y_spk = pos_y[indices_tiempo]
-    vel_celula = vel[indices_tiempo]
-    
-    ## SPEED FILTER
-    umbral_velocidad = 2.0  # cm/s (filtro biológico clásico para descartar "grooming" o siestas)
-    mask_movimiento = vel_celula > umbral_velocidad
-    
-    pos_x_spk = pos_x_spk[mask_movimiento]
-    pos_y_spk = pos_y_spk[mask_movimiento]
-    
+
     file.close()
     
-    return pos_x, pos_y, pos_t, vel, pos_x_spk, pos_y_spk, dt_video
+    return pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula
 
 def rate_map(sesion, tetrodo, neurona, n_bins=36, smooth_sigma=1.5, min_tiempo_seg=0.1):
     """    
@@ -531,10 +431,33 @@ def rate_map(sesion, tetrodo, neurona, n_bins=36, smooth_sigma=1.5, min_tiempo_s
     """
     from scipy.ndimage import gaussian_filter
     
-    pos_x, pos_y, pos_t, vel, spk_x, spk_y, dt_video = _cargar_datos_neurona(sesion, tetrodo, neurona)
+    pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
     
-    # definimos los bordes de la grilla
-    bordes = np.linspace(0, 90, n_bins + 1)
+    # posiciones interpoladas de cada spike
+    spk_x = np.interp(tiempos_celula, pos_t, pos_x)
+    spk_y = np.interp(tiempos_celula, pos_t, pos_y)
+    
+    # speed filter
+    vel_spk = np.interp(tiempos_celula, pos_t, vel)
+    mask_mov = vel_spk > 2.0
+    spk_x = spk_x[mask_mov]
+    spk_y = spk_y[mask_mov]
+    
+    # centrar a 0-90 cm
+    mid_x = (np.nanmax(pos_x) + np.nanmin(pos_x)) / 2
+    mid_y = (np.nanmax(pos_y) + np.nanmin(pos_y)) / 2
+    shift_x = 45 - mid_x
+    shift_y = 45 - mid_y
+    pos_x = pos_x + shift_x
+    pos_y = pos_y + shift_y
+    spk_x = spk_x + shift_x
+    spk_y = spk_y + shift_y
+    
+    # definimos los bordes de la grilla — más ancha que la trayectoria para
+    # que aparezcan bins vacíos (blancos) en los bordes como en el paper
+    pad = 10  # cm extra a cada lado
+    bin_size = 90.0 / n_bins  # tamaño de cada cuadradito en cm
+    bordes = np.arange(-pad, 90 + pad + bin_size, bin_size)
     
     # 1. mapa de ocupación: cuánto tiempo pasó el animal en cada bin
     ocup_counts, _, _ = np.histogram2d(pos_x, pos_y, bins=[bordes, bordes])
@@ -552,47 +475,37 @@ def rate_map(sesion, tetrodo, neurona, n_bins=36, smooth_sigma=1.5, min_tiempo_s
     mask_visitado = ocup_suave > min_tiempo_seg
     rate[mask_visitado] = spk_suave[mask_visitado] / ocup_suave[mask_visitado]
     
-    # 5. enmascarar bins no visitados -> NaN (se dibujan blancos)
+    # 5. NaN se dibujan blancos
     rate[~mask_visitado] = np.nan
     
     max_rate = np.nanmax(rate)
     
     # 6. graficar
-    fig, axes = plt.subplots(1, 2, figsize=(9, 4.5))
+    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     
-    # Panel izquierdo: firing map
+    # firing map
     ax1 = axes[0]
     ax1.plot(pos_x, pos_y, color='black', linewidth=0.3, alpha=0.6)
     ax1.scatter(spk_x, spk_y, color='red', s=8, zorder=5, linewidths=0)
+    ax1.set_xlim(bordes[0], bordes[-1]); ax1.set_ylim(bordes[0], bordes[-1])
     ax1.set_aspect('equal')
-    ax1.axis('off') # Quita el recuadro negro y los números
+    ax1.axis('off')
+    ax1.set_title('90 cm', fontsize=12, pad=8)
     
-    # Agregar barra de escala superior ("90 cm")
-    ax1.plot([0, 90], [92, 92], color='black', linewidth=3, clip_on=False)
-    ax1.text(45, 94, '90 cm', ha='center', va='bottom', fontsize=14, clip_on=False)
-    ax1.set_xlim(0, 90); ax1.set_ylim(0, 90)
-    
-    # Panel derecho: rate map
+    # rate map
     ax2 = axes[1]
     ax2.set_facecolor('white')
     mesh = ax2.pcolormesh(bordes, bordes, rate.T, cmap='jet', vmin=0, vmax=max_rate, shading='flat')
+    ax2.set_xlim(bordes[0], bordes[-1]); ax2.set_ylim(bordes[0], bordes[-1])
     ax2.set_aspect('equal')
-    ax2.axis('off') # Quita el recuadro negro
+    ax2.axis('off')
+    ax2.set_title(f'Max. {max_rate:.1f} Hz', fontsize=12, pad=8)
     
-    # Texto Max Hz estilo paper (arriba a la derecha)
-    ax2.text(90, 94, f'Max. [Hz]\n{max_rate:.1f}', ha='right', va='bottom', fontsize=14, color='white', clip_on=False)
-    ax2.text(90, 92, 'Max. [Hz]', ha='right', va='bottom', fontsize=14, color='black', clip_on=False)
-    ax2.text(88, 88, f'{max_rate:.1f}', ha='right', va='top', fontsize=18, color='white', clip_on=False)
-    ax2.set_xlim(0, 90); ax2.set_ylim(0, 90)
-    
-    # Colorbar chica estilo paper
+    # colorbar
     cbar = fig.colorbar(mesh, ax=ax2, fraction=0.03, pad=0.02, ticks=[0, max_rate])
-    cbar.ax.set_yticklabels(['0', 'Max.'])
-    cbar.ax.tick_params(labelsize=12, length=0)
+    cbar.ax.set_yticklabels(['0', f'{max_rate:.1f}'])
+    cbar.ax.tick_params(labelsize=10, length=0)
     cbar.outline.set_visible(False)
     
-    plt.subplots_adjust(wspace=0.1)
-    plt.show()
-    firing_map(sesion, tetrodo, neurona)
-    
-
+    plt.tight_layout()
+    plt.show()
