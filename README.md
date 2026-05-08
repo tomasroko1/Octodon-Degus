@@ -34,7 +34,7 @@ Modela la respuesta de la neurona puramente a la posición (X, Y) usando **Splin
 - **Place field predictivo**: El place field se expresa como un gradiente suave y continuo, reflejando de manera más natural la probabilidad espacial de la célula (comparar con modelos lineales).
 ![GAM 2](figures/gam2.png)
 
-### Fundamentos del Modelado
+### Modelado
 - **Bineado Temporal ($Y$)**: Dado que la cámara y los electrodos miden datos de distinta naturaleza, discretizamos el tiempo en vetanas. Esto nos permite construir el vector de spikes por ventana alineado con la trayectoria, generando las filas de entrenamiento necesarias para el Poisson GAM.
 - **Validación Cruzada (Gridsearch)**: El GAM utiliza una penalidad ($\lambda$) que se calibra automáticamente. Si se le otorgan muchas funciones base (splines), el *gridsearch* aumenta esta penalidad para aplastarlas, garantizando que la superficie final sea estadísticamente suave e indicando la complejidad real de los datos a través de los Grados de Libertad Efectivos (EDoF).
 - **Overfit (Límite de Splines)**: Aunque la validación cruzada previene picos de ruido, es "ciega" al comportamiento animal. Si otorgamos demasiados splines (ej. 20x20), el modelo se sobreajustará *al recorrido exacto* del degú en lugar de a la codificación abstracta del hipocampo. Por eso restringimos el tope de complejidad (ej. `splines=5` o `6`) forzando al modelo a revelar únicamente los verdaderos place fields.
