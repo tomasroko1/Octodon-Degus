@@ -29,10 +29,10 @@ El espacio se fracciona en cuadraditos, y el modelo ajusta el peso de cada regi�
 Modela la respuesta de la neurona puramente a la posición (X, Y) usando **Splines**. El GAM encuentra la penalización óptima mediante cross validation.
 
 - **Serie temporal ("Predicción vs Realidad")**: En negro se ven las barras que representan los disparos (spikes) discretos reales que disparó la neurona. La línea roja continua superpuesta es lo que el modelo GAM predice que debería haber disparado basándose exclusivamente en la posición exacta del degú en ese momento.
-![GAM 1](figures/gam1.png)
+![GAM 1](figures/GAM1.png)
 
 - **Place field predictivo**: El place field se expresa como un gradiente suave y continuo, reflejando de manera más natural la probabilidad espacial de la célula (comparar con modelos lineales).
-![GAM 2](figures/gam2.png)
+![GAM 2](figures/GAM2.png)
 
 ### Modelado
 - **Bineado Temporal ($Y$)**: Dado que la cámara y los electrodos miden datos de distinta naturaleza, discretizamos el tiempo en vetanas. Esto nos permite construir el vector de spikes por ventana alineado con la trayectoria, generando las filas de entrenamiento necesarias para el Poisson GAM.
