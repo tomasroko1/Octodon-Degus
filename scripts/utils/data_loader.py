@@ -33,9 +33,8 @@ def _cargar_datos_neurona(sesion, tetrodo, neurona):
     pos_y = np.array(file[nombre_pos]['y']).flatten()
     pos_t = np.array(file[nombre_pos]['t']).flatten()
     
-    dt_video = np.mean(np.diff(pos_t)) # segundos por frame
+    dt_video = np.mean(np.diff(pos_t)) # segundos por frame ~0.02
 
-    print('DEBUG TOMI', dt_video)
     ## calculo de velocidad
     dx = np.diff(pos_x)
     dy = np.diff(pos_y)
@@ -61,7 +60,9 @@ def _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video):
     """
     from scipy.ndimage import gaussian_filter1d
     sigma_frames = 1
-    pos_x = gaussian_filter1d(pos_x, sigma=sigma_frames)
+    pos_x = gaussian_filter1d(pos_x, sigma=sigma_frames) 
+    # NOTE: Me dijo emilio que no usan gaussianas, usan otro que usa estimaciones bayesianas .....
+    # Además, lo datos ya estan filtrados. hay que omitir esto. dejo la funcion para recordar esto
     pos_y = gaussian_filter1d(pos_y, sigma=sigma_frames)
     
     dx = np.diff(pos_x)
@@ -73,7 +74,7 @@ def _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video):
 
 def preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec):
     pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
-    pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
+    # pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
     
     # 3. binning temporal
     bins_tiempo = np.arange(pos_t[0], pos_t[-1], bin_size_sec)
@@ -97,18 +98,19 @@ def preparar_datos_viewpoint_1d(sesion, tetrodo, neurona, bin_size_sec=0.1):
     en un perímetro 1d continuo (0 a perímetro total).
     """
     pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
-    pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
+    # pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
     
     x_min, x_max = np.min(pos_x), np.max(pos_x)
     y_min, y_max = np.min(pos_y), np.max(pos_y)
     W = x_max - x_min
     H = y_max - y_min
     
-    # angulo de la mirada
-    dx = np.diff(pos_x)
-    dy = np.diff(pos_y)
+    # cargar head direction (hd) real desde la base de datos
+    file = h5py.File(db_merged, 'r')
+    angulo = np.array(file[f'pos_{sesion}']['hd']).flatten()
+    file.close()
     
-    angulo = np.append(np.arctan2(dy, dx), 0)
+    # el tracking puede tener ángulos con wrap en -pi/pi, los unwrap-eamos para interpolar bien
     angulo = np.unwrap(angulo)
     
     # 4. binning temporal

@@ -18,21 +18,30 @@ def firing_map(sesion, tetrodo, neurona):
     """
     pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
 
-    # filtro gaussiano preguntar.. -> no se si estos x,y ya estan procesados,
+    # NOTE filtro gaussiano preguntar.. -> no se si estos x,y ya estan procesados,
     #                                 o son datos crudos. no se si puede haber ruido, etc.
-    pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
+    # RTA: Los datos si estan procesados
+    #
+    # Head Direction está calculado con la dirección de la velocidad
+    # NO está medido
+    #pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
     
     print(f"-> graficando s={sesion}, t={tetrodo}, c={neurona}. disparos: {len(tiempos_celula)}")
     
+
+    ##
+    ## NOTE Elimino este analisis de velocidad
+    ##
+
     ## filtro de velocidad (speed filter) preguntar..
     # interpolamos la velocidad exacta en el instante de cada spike
-    vel_celula = np.interp(tiempos_celula, pos_t, vel)
+    # vel_celula = np.interp(tiempos_celula, pos_t, vel)
     
-    # descartamos spikes de "modo quieto" preguntar..
-    umbral_velocidad = 2
-    mask_movimiento = vel_celula > umbral_velocidad
-    tiempos_celula = tiempos_celula[mask_movimiento]
-    print(f"-> disparos tras filtro de velocidad (> {umbral_velocidad} cm/s): {len(tiempos_celula)}")
+    # # descartamos spikes de "modo quieto" preguntar..
+    # umbral_velocidad = 2
+    # mask_movimiento = vel_celula > umbral_velocidad
+    # tiempos_celula = tiempos_celula[mask_movimiento]
+    # print(f"-> disparos tras filtro de velocidad (> {umbral_velocidad} cm/s): {len(tiempos_celula)}")
 
     # 3. interpolamos para saber la coordenada x,y aproximada en el microsegundo del disparo
     pos_x_celula = np.interp(tiempos_celula, pos_t, pos_x)

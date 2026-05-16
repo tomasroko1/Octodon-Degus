@@ -17,7 +17,7 @@ try:
 except ImportError:
     from data_loader import preparar_datos_posicion, preparar_datos_viewpoint_1d
 
-def glm_posicion_manual(sesion, tetrodo, neurona, n_bines=45):
+def glm_posicion_manual(sesion, tetrodo, neurona, n_bines=36):
     print("\n--- INICIANDO GLM ---")
     X, Y = preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec=0.1)
     
@@ -77,7 +77,7 @@ def glm_posicion_manual(sesion, tetrodo, neurona, n_bines=45):
     plt.tight_layout()
     plt.show()
 
-def get_gam_posicion(sesion, tetrodo, neurona, splines=5, bin_size_sec=0.1, force_retrain=False):
+def get_gam_posicion(sesion, tetrodo, neurona, splines, lam, bin_size_sec=0.1, force_retrain=False):
     archivo_modelo = f'modelo_gam_pos_s{sesion}_t{tetrodo}_n{neurona}_sp{splines}.pkl'
     X, Y = preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec)
     
@@ -87,7 +87,24 @@ def get_gam_posicion(sesion, tetrodo, neurona, splines=5, bin_size_sec=0.1, forc
             modelo_gam = pickle.load(f)
     else:
         print(f"[-] Entrenando GAM Posición ({splines}x{splines} splines)...")
-        modelo_gam = PoissonGAM(te(0, 1, n_splines=splines)).gridsearch(X, Y, progress=False)
+        
+        #modelo_gam = PoissonGAM(te(0, 1, n_splines=splines)).gridsearch(X, Y, progress=False)
+
+        # Evitamos usar .gridsearch() que usa GCV (Generalized Cross Validation)
+        # para s 2 3 3 obtuvo los mismos valores de lambda que los que fueron
+        # obtenidos cross-validando
+        # Ya que tenemos el lambda cross-validado -> evitamos el GCV innecesario 
+        modelo_gam = PoissonGAM(te(0, 1, n_splines=splines, lam=lam)).fit(X, Y)
+
+
+        ## queremos calcular el error del gam. por ejemplo compararlo con el glm, la prediccion
+        ## de spikes (media, depende del tiempo. no fija) contra los spikes reales (realizacion)
+
+
+        ## agregar grafico gam2 tambien para glm y comparar
+
+        ## queremos asegurarnos de que esto este crossvalidando bien -> croosvalidar por segmento en la linea temporal
+
         with open(archivo_modelo, 'wb') as f:
             pickle.dump(modelo_gam, f)
             
@@ -132,14 +149,21 @@ def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, b
     fig2 = plt.figure(figsize=(12, 4))
     ax2 = fig2.add_subplot(111)
     
-    limite = min(10000, len(Y)) 
+    limite = len(Y) 
     tiempo_eje = np.arange(limite) * bin_size_sec
     
-    ax2.bar(tiempo_eje, Y[:limite], width=bin_size_sec, color='black', alpha=0.6, label='Spikes Reales')
-    ax2.plot(tiempo_eje, prediccion_tiempo[:limite], color='red', linewidth=2, label='Predicción Continua')
+    ax2.bar(tiempo_eje, Y[:limite], width=bin_size_sec, color='black', alpha=0.6, label='spikes')
+    ax2.plot(tiempo_eje, prediccion_tiempo[:limite], color='red', linewidth=2, label='spikes prediction')
     
-    ax2.set_xlabel('Tiempo (segundos)')
-    ax2.set_ylabel('Cantidad de Spikes')
+    ax2.set_xlabel('time (seconds)')
+    ax2.set_ylabel('spike count')
+    
+    conteos = np.bincount(Y[:limite].astype(int))
+    umbral = max(1, int(limite * 0.001))
+    valores_comunes = np.where(conteos > umbral)[0]
+    max_visible = np.max(valores_comunes) if len(valores_comunes) > 0 else np.max(Y[:limite])
+    
+    ax2.set_ylim(0, max_visible + 1)
     ax2.legend()
     
     plt.tight_layout()

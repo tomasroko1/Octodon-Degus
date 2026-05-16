@@ -17,3 +17,4 @@ mapa_posiciones.py
 papers/
 scripts/glm_analysis.py
 *.pkl
+scripts/play_cv.py
