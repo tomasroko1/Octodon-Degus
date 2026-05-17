@@ -1,0 +1,6 @@
+=== RESULTADOS FINALES CON EDoF FORZADO ===
+4 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.0000 | Error NLL: 0.19962
+5 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.0015 | Error NLL: 0.19696
+6 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.0161 | Error NLL: 0.19752
+7 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.0989 | Error NLL: 0.19636
+8 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.2750 | Error NLL: 0.19648

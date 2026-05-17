@@ -94,6 +94,7 @@ def get_gam_posicion(sesion, tetrodo, neurona, splines, lam, bin_size_sec=0.1, f
         # para s 2 3 3 obtuvo los mismos valores de lambda que los que fueron
         # obtenidos cross-validando
         # Ya que tenemos el lambda cross-validado -> evitamos el GCV innecesario 
+        
         modelo_gam = PoissonGAM(te(0, 1, n_splines=splines, lam=lam)).fit(X, Y)
 
 
@@ -114,29 +115,31 @@ def get_gam_posicion(sesion, tetrodo, neurona, splines, lam, bin_size_sec=0.1, f
 
 def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, bin_size_sec=0.1):
     print("\n--- GRAFICANDO GAM ---")
-    XX_pos = modelo_gam.generate_X_grid(term=0, n=36)
-    Z_pos = modelo_gam.partial_dependence(term=0, X=XX_pos)
     
-    x_grid = XX_pos[:, 0].reshape(36, 36)
-    y_grid = XX_pos[:, 1].reshape(36, 36)
-    z_grid = Z_pos.reshape(36, 36)
+    # 1. Definimos una resolución alta (n=100) para un renderizado muy suave
+    n_res = 100 
+    XX_pos = modelo_gam.generate_X_grid(term=0, n=n_res)
+    #Z_pos = np.exp(modelo_gam.partial_dependence(term=0, X=XX_pos))
+    Z_pos = modelo_gam.predict(XX_pos)
+
+    # 2. Obligatorio para contourf: Convertir las listas planas en matrices 2D (100x100)
+    x_grid = XX_pos[:, 0].reshape(n_res, n_res)
+    y_grid = XX_pos[:, 1].reshape(n_res, n_res)
+    z_grid = Z_pos.reshape(n_res, n_res)
     
-    # 1. crear una máscara de ocupancia basada en las posiciones reales (x)
+    # 3. Crear una máscara de ocupancia basada en las posiciones reales (X)
     from scipy.spatial import cKDTree
-    # construimos un árbol kd con las posiciones por las que pasó el animal
     tree = cKDTree(X)
-    # buscamos la distancia desde cada punto del grid al punto real más cercano
     distancias, _ = tree.query(XX_pos)
-    distancias = distancias.reshape(36, 36)
     
-    # si un punto del grid está a más de 5 cm de una pisada real, lo consideramos "no visitado"
-    # y lo volvemos nan para que matplotlib lo dibuje blanco.
+    # También debemos hacer reshape a las distancias para que coincidan con la grilla
+    distancias = distancias.reshape(n_res, n_res)
+    
+    # Ocultar las zonas no visitadas (> 5 cm)
     z_grid[distancias > 5.0] = np.nan
     
     fig = plt.figure(figsize=(7, 6))
     ax = fig.add_subplot(111)
-    
-    # 2.
     ax.set_facecolor('white')
     mesh = ax.pcolormesh(x_grid, y_grid, z_grid, cmap='jet', shading='nearest')
     fig.colorbar(mesh, ax=ax, label='Tasa de Disparo (Spikes/Bin)')
@@ -144,6 +147,8 @@ def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, b
     ax.set_aspect('equal')
     ax.axis('off')
     
+    ## 2do plot
+
     prediccion_tiempo = modelo_gam.predict(X)
     
     fig2 = plt.figure(figsize=(12, 4))
