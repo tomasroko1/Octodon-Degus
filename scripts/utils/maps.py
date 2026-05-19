@@ -7,9 +7,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
 try:
-    from .data_loader import _cargar_datos_neurona, _suavizar_posicion_y_velocidad
+    from .data_loader import _cargar_datos_neurona
 except ImportError:
-    from data_loader import _cargar_datos_neurona, _suavizar_posicion_y_velocidad
+    from data_loader import _cargar_datos_neurona
 
 def firing_map(sesion, tetrodo, neurona):
     """
@@ -71,7 +71,7 @@ def rate_map(sesion, tetrodo, neurona, bin_size_cm=2.5, sigma_cm=4, min_tiempo_s
     """
     
     pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
-    pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
+    #pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
     
     # interpolar posiciones y velocidades de los spikes
     spk_x = np.interp(tiempos_celula, pos_t, pos_x)

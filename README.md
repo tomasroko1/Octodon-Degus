@@ -5,7 +5,7 @@ Análisis de células hipocampales en *Octodon degus*. Todo el código se corre 
 ## 1. Mapas (`maps.py`)
 `firing_map` grafica el recorrido del animal en gris y le pone puntos rojos donde la neurona disparó, filtrando los momentos en los que el animal estaba quieto. `rate_map` toma esos datos y genera un mapa de calor dividiendo los spikes por el tiempo que el animal pasó en cada zona.
 
-## 2. GLM Manual (`glm_posicion_manual`)
+## 2. GLM Manual (`glm_position`)
 Dividimos la caja en una grilla de campanas de gauss y ajustamos el peso de cada una asumiendo una distribución de poisson. Sirve para ver cómo responde la neurona al espacio, pero al ser una grilla rígida, el mapa queda bastante "pixelado".
 
 ## 3. GAM Espacial (`get_gam_posicion`)

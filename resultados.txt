@@ -1,6 +1,510 @@
-=== RESULTADOS FINALES CON EDoF FORZADO ===
-4 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.0000 | Error NLL: 0.19962
-5 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.0015 | Error NLL: 0.19696
-6 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.0161 | Error NLL: 0.19752
-7 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.0989 | Error NLL: 0.19636
-8 Splines (Forzado a 13.0 EDoF) | Lambda Promedio: 0.2750 | Error NLL: 0.19648
+============================================================
+  PIPELINE: CV + HELD-OUT + PSEUDO R²
+============================================================
+
+1. Cargando datos...
+   Total de muestras: 11952
+
+2. Partición unificada (held-out + CV folds con buffer de 2s)...
+   Bloques totales: 19 | Held-out: 4 | CV: 15
+   Train pool: 8880 muestras (74.3%)
+   Held-out:   2952 muestras (24.7%)
+   Fold 0: train=7080 | test=1800
+   Fold 1: train=6960 | test=1800
+   Fold 2: train=6960 | test=1800
+   Fold 3: train=6960 | test=1800
+   Fold 4: train=7080 | test=1800
+
+3. CV para selección de hiperparámetros GAM...
+sp= 4, lam= 0.0001000 | edof:   9.8534 | nll test: 0.19218440
+sp= 4, lam= 0.0003981 | edof:   8.5642 | nll test: 0.19289253
+sp= 4, lam= 0.0015849 | edof:   7.1899 | nll test: 0.19605489
+sp= 4, lam= 0.0063096 | edof:   6.0588 | nll test: 0.20252032
+sp= 4, lam= 0.0251189 | edof:   5.3165 | nll test: 0.21132359
+sp= 4, lam= 0.1000000 | edof:   4.7354 | nll test: 0.22391867
+sp= 4, lam= 0.3981072 | edof:   4.3061 | nll test: 0.23652013
+sp= 4, lam= 1.5848932 | edof:   4.0946 | nll test: 0.24321248
+sp= 4, lam= 6.3095734 | edof:   4.0253 | nll test: 0.24543803
+sp= 4, lam=25.1188643 | edof:   4.0065 | nll test: 0.24604460
+sp= 4, lam=100.0000000 | edof:   4.0016 | nll test: 0.24620026
+sp= 5, lam= 0.0001000 | edof:  17.4271 | nll test: 0.19303663
+sp= 5, lam= 0.0003981 | edof:  15.0660 | nll test: 0.19200285
+sp= 5, lam= 0.0015849 | edof:  12.4236 | nll test: 0.19130504
+sp= 5, lam= 0.0063096 | edof:  10.0021 | nll test: 0.19121470
+sp= 5, lam= 0.0251189 | edof:   8.0999 | nll test: 0.19307966
+sp= 5, lam= 0.1000000 | edof:   6.5671 | nll test: 0.19849860
+sp= 5, lam= 0.3981072 | edof:   5.5303 | nll test: 0.20781881
+sp= 5, lam= 1.5848932 | edof:   4.8076 | nll test: 0.22187643
+sp= 5, lam= 6.3095734 | edof:   4.3175 | nll test: 0.23585351
+sp= 5, lam=25.1188643 | edof:   4.0947 | nll test: 0.24305916
+sp= 5, lam=100.0000000 | edof:   4.0250 | nll test: 0.24540251
+sp= 6, lam= 0.0001000 | edof:  25.1166 | nll test: 0.19608341
+sp= 6, lam= 0.0003981 | edof:  21.8473 | nll test: 0.19531580
+sp= 6, lam= 0.0015849 | edof:  18.1892 | nll test: 0.19401229
+sp= 6, lam= 0.0063096 | edof:  14.6427 | nll test: 0.19291050
+sp= 6, lam= 0.0251189 | edof:  11.6099 | nll test: 0.19201282
+sp= 6, lam= 0.1000000 | edof:   9.1737 | nll test: 0.19246586
+sp= 6, lam= 0.3981072 | edof:   7.2264 | nll test: 0.19707471
+sp= 6, lam= 1.5848932 | edof:   5.7962 | nll test: 0.20790570
+sp= 6, lam= 6.3095734 | edof:   4.8616 | nll test: 0.22350525
+sp= 6, lam=25.1188643 | edof:   4.3108 | nll test: 0.23719515
+sp= 6, lam=100.0000000 | edof:   4.0888 | nll test: 0.24356981
+sp= 7, lam= 0.0001000 | edof:  33.3749 | nll test: 0.20086404
+sp= 7, lam= 0.0003981 | edof:  29.2818 | nll test: 0.19762290
+sp= 7, lam= 0.0015849 | edof:  24.8111 | nll test: 0.19534407
+sp= 7, lam= 0.0063096 | edof:  20.4298 | nll test: 0.19382503
+sp= 7, lam= 0.0251189 | edof:  16.1833 | nll test: 0.19243692
+sp= 7, lam= 0.1000000 | edof:  12.2540 | nll test: 0.19120418
+sp= 7, lam= 0.3981072 | edof:   9.1643 | nll test: 0.19175971
+sp= 7, lam= 1.5848932 | edof:   6.9789 | nll test: 0.19770411
+sp= 7, lam= 6.3095734 | edof:   5.5312 | nll test: 0.21140821
+sp= 7, lam=25.1188643 | edof:   4.6355 | nll test: 0.22880657
+sp= 7, lam=100.0000000 | edof:   4.1997 | nll test: 0.24031928
+sp= 8, lam= 0.0001000 | edof:  42.4801 | nll test: 0.20038547
+sp= 8, lam= 0.0003981 | edof:  37.4799 | nll test: 0.19783078
+sp= 8, lam= 0.0015849 | edof:  32.0943 | nll test: 0.19622373
+sp= 8, lam= 0.0063096 | edof:  26.5475 | nll test: 0.19505296
+sp= 8, lam= 0.0251189 | edof:  20.8801 | nll test: 0.19375651
+sp= 8, lam= 0.1000000 | edof:  15.4936 | nll test: 0.19218954
+sp= 8, lam= 0.3981072 | edof:  11.2177 | nll test: 0.19139513
+sp= 8, lam= 1.5848932 | edof:   8.2388 | nll test: 0.19409044
+sp= 8, lam= 6.3095734 | edof:   6.2597 | nll test: 0.20429116
+sp= 8, lam=25.1188643 | edof:   5.0225 | nll test: 0.22135041
+sp= 8, lam=100.0000000 | edof:   4.3523 | nll test: 0.23646378
+sp= 9, lam= 0.0001000 | edof:  52.7011 | nll test: 0.20689683
+sp= 9, lam= 0.0003981 | edof:  46.5690 | nll test: 0.19968917
+sp= 9, lam= 0.0015849 | edof:  39.9417 | nll test: 0.19605220
+sp= 9, lam= 0.0063096 | edof:  32.8905 | nll test: 0.19478907
+sp= 9, lam= 0.0251189 | edof:  25.6329 | nll test: 0.19417829
+sp= 9, lam= 0.1000000 | edof:  18.9048 | nll test: 0.19305042
+sp= 9, lam= 0.3981072 | edof:  13.4498 | nll test: 0.19166013
+sp= 9, lam= 1.5848932 | edof:   9.5680 | nll test: 0.19224875
+sp= 9, lam= 6.3095734 | edof:   7.0295 | nll test: 0.19935918
+sp= 9, lam=25.1188643 | edof:   5.4440 | nll test: 0.21493321
+sp= 9, lam=100.0000000 | edof:   4.5385 | nll test: 0.23223894
+sp=10, lam= 0.0001000 | edof:  63.1688 | nll test: 0.21905459
+sp=10, lam= 0.0003981 | edof:  56.0089 | nll test: 0.20842800
+sp=10, lam= 0.0015849 | edof:  47.9698 | nll test: 0.20119106
+sp=10, lam= 0.0063096 | edof:  39.4829 | nll test: 0.19749034
+sp=10, lam= 0.0251189 | edof:  30.7481 | nll test: 0.19570811
+sp=10, lam= 0.1000000 | edof:  22.5632 | nll test: 0.19419882
+sp=10, lam= 0.3981072 | edof:  15.8081 | nll test: 0.19237718
+sp=10, lam= 1.5848932 | edof:  10.9615 | nll test: 0.19174222
+sp=10, lam= 6.3095734 | edof:   7.8275 | nll test: 0.19631322
+sp=10, lam=25.1188643 | edof:   5.8846 | nll test: 0.20980653
+sp=10, lam=100.0000000 | edof:   4.7493 | nll test: 0.22800261
+sp=11, lam= 0.0001000 | edof:  74.5111 | nll test: 0.22281728
+sp=11, lam= 0.0003981 | edof:  66.4450 | nll test: 0.20715673
+sp=11, lam= 0.0015849 | edof:  56.9147 | nll test: 0.19869934
+sp=11, lam= 0.0063096 | edof:  46.5083 | nll test: 0.19476694
+sp=11, lam= 0.0251189 | edof:  35.9762 | nll test: 0.19330189
+sp=11, lam= 0.1000000 | edof:  26.1660 | nll test: 0.19307999
+sp=11, lam= 0.3981072 | edof:  18.1165 | nll test: 0.19239983
+sp=11, lam= 1.5848932 | edof:  12.3493 | nll test: 0.19163580
+sp=11, lam= 6.3095734 | edof:   8.6248 | nll test: 0.19447736
+sp=11, lam=25.1188643 | edof:   6.3306 | nll test: 0.20585022
+sp=11, lam=100.0000000 | edof:   4.9757 | nll test: 0.22400417
+
+   [CV] Mejor GAM: splines=7, lambda=0.1 | NLL CV=0.19120418
+
+4. CV para selección de hiperparámetros GLM...
+GLM | bines= 4x 4, alpha= 0.0000 | nll test: 0.19512433
+GLM | bines= 4x 4, alpha= 0.0000 | nll test: 0.19375990
+GLM | bines= 4x 4, alpha= 0.0000 | nll test: 0.19221019
+GLM | bines= 4x 4, alpha= 0.0001 | nll test: 0.19108842
+GLM | bines= 4x 4, alpha= 0.0003 | nll test: 0.19147128
+GLM | bines= 4x 4, alpha= 0.0010 | nll test: 0.19650903
+GLM | bines= 4x 4, alpha= 0.0040 | nll test: 0.21197827
+GLM | bines= 4x 4, alpha= 0.0158 | nll test: 0.24168196
+GLM | bines= 4x 4, alpha= 0.0631 | nll test: 0.28671905
+GLM | bines= 4x 4, alpha= 0.2512 | nll test: 0.37743038
+GLM | bines= 4x 4, alpha= 1.0000 | nll test: 0.55991812
+GLM | bines= 5x 5, alpha= 0.0000 | nll test: 0.19674868
+GLM | bines= 5x 5, alpha= 0.0000 | nll test: 0.19515006
+GLM | bines= 5x 5, alpha= 0.0000 | nll test: 0.19341200
+GLM | bines= 5x 5, alpha= 0.0001 | nll test: 0.19181415
+GLM | bines= 5x 5, alpha= 0.0003 | nll test: 0.19052189
+GLM | bines= 5x 5, alpha= 0.0010 | nll test: 0.19158896
+GLM | bines= 5x 5, alpha= 0.0040 | nll test: 0.20179796
+GLM | bines= 5x 5, alpha= 0.0158 | nll test: 0.23078982
+GLM | bines= 5x 5, alpha= 0.0631 | nll test: 0.28282706
+GLM | bines= 5x 5, alpha= 0.2512 | nll test: 0.38185574
+GLM | bines= 5x 5, alpha= 1.0000 | nll test: 0.57029237
+GLM | bines= 6x 6, alpha= 0.0000 | nll test: 0.19654563
+GLM | bines= 6x 6, alpha= 0.0000 | nll test: 0.19590534
+GLM | bines= 6x 6, alpha= 0.0000 | nll test: 0.19448908
+GLM | bines= 6x 6, alpha= 0.0001 | nll test: 0.19293971
+GLM | bines= 6x 6, alpha= 0.0003 | nll test: 0.19139266
+GLM | bines= 6x 6, alpha= 0.0010 | nll test: 0.19112106
+GLM | bines= 6x 6, alpha= 0.0040 | nll test: 0.19825746
+GLM | bines= 6x 6, alpha= 0.0158 | nll test: 0.22516212
+GLM | bines= 6x 6, alpha= 0.0631 | nll test: 0.28078106
+GLM | bines= 6x 6, alpha= 0.2512 | nll test: 0.38669108
+GLM | bines= 6x 6, alpha= 1.0000 | nll test: 0.58091718
+GLM | bines= 7x 7, alpha= 0.0000 | nll test: 0.19748086
+GLM | bines= 7x 7, alpha= 0.0000 | nll test: 0.19595984
+GLM | bines= 7x 7, alpha= 0.0000 | nll test: 0.19468465
+GLM | bines= 7x 7, alpha= 0.0001 | nll test: 0.19340227
+GLM | bines= 7x 7, alpha= 0.0003 | nll test: 0.19200298
+GLM | bines= 7x 7, alpha= 0.0010 | nll test: 0.19152706
+GLM | bines= 7x 7, alpha= 0.0040 | nll test: 0.19695439
+GLM | bines= 7x 7, alpha= 0.0158 | nll test: 0.22206324
+GLM | bines= 7x 7, alpha= 0.0631 | nll test: 0.27991087
+GLM | bines= 7x 7, alpha= 0.2512 | nll test: 0.39128585
+GLM | bines= 7x 7, alpha= 1.0000 | nll test: 0.59040917
+GLM | bines= 8x 8, alpha= 0.0000 | nll test: 0.20304811
+GLM | bines= 8x 8, alpha= 0.0000 | nll test: 0.19753139
+GLM | bines= 8x 8, alpha= 0.0000 | nll test: 0.19537355
+GLM | bines= 8x 8, alpha= 0.0001 | nll test: 0.19408542
+GLM | bines= 8x 8, alpha= 0.0003 | nll test: 0.19269613
+GLM | bines= 8x 8, alpha= 0.0010 | nll test: 0.19216444
+GLM | bines= 8x 8, alpha= 0.0040 | nll test: 0.19690871
+GLM | bines= 8x 8, alpha= 0.0158 | nll test: 0.22080437
+GLM | bines= 8x 8, alpha= 0.0631 | nll test: 0.28003786
+GLM | bines= 8x 8, alpha= 0.2512 | nll test: 0.39557082
+GLM | bines= 8x 8, alpha= 1.0000 | nll test: 0.59859138
+GLM | bines= 9x 9, alpha= 0.0000 | nll test: 0.20149433
+GLM | bines= 9x 9, alpha= 0.0000 | nll test: 0.19688178
+GLM | bines= 9x 9, alpha= 0.0000 | nll test: 0.19430157
+GLM | bines= 9x 9, alpha= 0.0001 | nll test: 0.19333848
+GLM | bines= 9x 9, alpha= 0.0003 | nll test: 0.19259948
+GLM | bines= 9x 9, alpha= 0.0010 | nll test: 0.19256192
+GLM | bines= 9x 9, alpha= 0.0040 | nll test: 0.19733943
+GLM | bines= 9x 9, alpha= 0.0158 | nll test: 0.22064714
+GLM | bines= 9x 9, alpha= 0.0631 | nll test: 0.28084415
+GLM | bines= 9x 9, alpha= 0.2512 | nll test: 0.39951720
+GLM | bines= 9x 9, alpha= 1.0000 | nll test: 0.60557312
+GLM | bines=10x10, alpha= 0.0000 | nll test: 0.20224088
+GLM | bines=10x10, alpha= 0.0000 | nll test: 0.19675297
+GLM | bines=10x10, alpha= 0.0000 | nll test: 0.19416414
+GLM | bines=10x10, alpha= 0.0001 | nll test: 0.19308186
+GLM | bines=10x10, alpha= 0.0003 | nll test: 0.19261249
+GLM | bines=10x10, alpha= 0.0010 | nll test: 0.19293678
+GLM | bines=10x10, alpha= 0.0040 | nll test: 0.19799955
+GLM | bines=10x10, alpha= 0.0158 | nll test: 0.22116252
+GLM | bines=10x10, alpha= 0.0631 | nll test: 0.28208521
+GLM | bines=10x10, alpha= 0.2512 | nll test: 0.40311452
+GLM | bines=10x10, alpha= 1.0000 | nll test: 0.61152033
+GLM | bines=11x11, alpha= 0.0000 | nll test: 0.20506485
+GLM | bines=11x11, alpha= 0.0000 | nll test: 0.19785718
+GLM | bines=11x11, alpha= 0.0000 | nll test: 0.19389685
+GLM | bines=11x11, alpha= 0.0001 | nll test: 0.19234117
+GLM | bines=11x11, alpha= 0.0003 | nll test: 0.19203168
+GLM | bines=11x11, alpha= 0.0010 | nll test: 0.19297090
+GLM | bines=11x11, alpha= 0.0040 | nll test: 0.19865431
+GLM | bines=11x11, alpha= 0.0158 | nll test: 0.22207081
+GLM | bines=11x11, alpha= 0.0631 | nll test: 0.28358611
+GLM | bines=11x11, alpha= 0.2512 | nll test: 0.40637238
+GLM | bines=11x11, alpha= 1.0000 | nll test: 0.61659838
+
+   [CV] Mejor GLM: bines=5x5, alpha=0.0003 | NLL CV=0.19052189
+
+5. Re-entrenando mejores modelos en todo el train pool...
+   GAM final entrenado (splines=7, lambda=0.1)
+   GLM final entrenado (bines=5, alpha=0.00025118864315095795)
+
+6. Evaluando en held-out set (2952 muestras)...
+
+   Modelo Nulo (tasa media = 0.0640):
+   NLL held-out nulo: 0.40705753
+
+============================================================
+  RESULTADOS FINALES EN HELD-OUT
+============================================================
+Métrica                      Modelo Nulo            GAM            GLM
+-------------------------------------------------------------------
+NLL (held-out)                0.40705753     0.25462373     0.25600850
+Pseudo R² (McFadden)                 ---       0.374477       0.371075
+-------------------------------------------------------------------
+
+   Ganador: GAM (ventaja NLL: 0.00138477)
+   Pseudo R² GAM: 0.3745 (37.45% de varianza explicada vs. modelo nulo)
+   Pseudo R² GLM: 0.3711 (37.11% de varianza explicada vs. modelo nulo)
+
+Generando mapa de calor de NLL para GAM...
+Generando mapa de calor de NLL para GLM...
+
+
+#### NEURONA 1
+
+============================================================
+  PIPELINE: CV + HELD-OUT + PSEUDO R²
+============================================================
+
+1. Cargando datos...
+   Total de muestras: 11952
+
+2. Partición unificada (held-out + CV folds con buffer de 2s)...
+   Bloques totales: 19 | Held-out: 4 | CV: 15
+   Train pool: 8880 muestras (74.3%)
+   Held-out:   2952 muestras (24.7%)
+   Fold 0: train=7080 | test=1800
+   Fold 1: train=6960 | test=1800
+   Fold 2: train=6960 | test=1800
+   Fold 3: train=6960 | test=1800
+   Fold 4: train=7080 | test=1800
+
+3. CV para selección de hiperparámetros GAM...
+sp= 4, lam= 0.0001000 | edof:  11.1941 | nll test: 0.37369035
+sp= 4, lam= 0.0003981 | edof:  10.0548 | nll test: 0.37121758
+sp= 4, lam= 0.0015849 | edof:   8.6220 | nll test: 0.37102168
+sp= 4, lam= 0.0063096 | edof:   7.2236 | nll test: 0.37150505
+sp= 4, lam= 0.0251189 | edof:   6.0797 | nll test: 0.36990246
+sp= 4, lam= 0.1000000 | edof:   5.1207 | nll test: 0.36832275
+sp= 4, lam= 0.3981072 | edof:   4.4539 | nll test: 0.36843092
+sp= 4, lam= 1.5848932 | edof:   4.1399 | nll test: 0.36896810
+sp= 4, lam= 6.3095734 | edof:   4.0375 | nll test: 0.36920852
+sp= 4, lam=25.1188643 | edof:   4.0096 | nll test: 0.36927921
+sp= 4, lam=100.0000000 | edof:   4.0024 | nll test: 0.36929771
+sp= 5, lam= 0.0001000 | edof:  18.7166 | nll test: 0.38283553
+sp= 5, lam= 0.0003981 | edof:  16.7932 | nll test: 0.37896217
+sp= 5, lam= 0.0015849 | edof:  14.6139 | nll test: 0.37493770
+sp= 5, lam= 0.0063096 | edof:  12.3207 | nll test: 0.37137458
+sp= 5, lam= 0.0251189 | edof:  10.0345 | nll test: 0.37085334
+sp= 5, lam= 0.1000000 | edof:   7.9819 | nll test: 0.37187344
+sp= 5, lam= 0.3981072 | edof:   6.4387 | nll test: 0.37070646
+sp= 5, lam= 1.5848932 | edof:   5.2517 | nll test: 0.36890160
+sp= 5, lam= 6.3095734 | edof:   4.4795 | nll test: 0.36872080
+sp= 5, lam=25.1188643 | edof:   4.1426 | nll test: 0.36907076
+sp= 5, lam=100.0000000 | edof:   4.0377 | nll test: 0.36923743
+sp= 6, lam= 0.0001000 | edof:  27.0886 | nll test: 0.37978493
+sp= 6, lam= 0.0003981 | edof:  24.1321 | nll test: 0.37582373
+sp= 6, lam= 0.0015849 | edof:  20.9311 | nll test: 0.37280378
+sp= 6, lam= 0.0063096 | edof:  17.5135 | nll test: 0.37099220
+sp= 6, lam= 0.0251189 | edof:  14.2231 | nll test: 0.36963330
+sp= 6, lam= 0.1000000 | edof:  11.4281 | nll test: 0.36986699
+sp= 6, lam= 0.3981072 | edof:   8.9676 | nll test: 0.37068179
+sp= 6, lam= 1.5848932 | edof:   6.8824 | nll test: 0.36983382
+sp= 6, lam= 6.3095734 | edof:   5.3499 | nll test: 0.36859246
+sp= 6, lam=25.1188643 | edof:   4.4753 | nll test: 0.36873869
+sp= 6, lam=100.0000000 | edof:   4.1353 | nll test: 0.36910357
+sp= 7, lam= 0.0001000 | edof:  36.3914 | nll test: 0.39632703
+sp= 7, lam= 0.0003981 | edof:  32.7033 | nll test: 0.39150433
+sp= 7, lam= 0.0015849 | edof:  28.6375 | nll test: 0.38436242
+sp= 7, lam= 0.0063096 | edof:  23.9581 | nll test: 0.37708817
+sp= 7, lam= 0.0251189 | edof:  19.2514 | nll test: 0.37335493
+sp= 7, lam= 0.1000000 | edof:  15.2313 | nll test: 0.36986174
+sp= 7, lam= 0.3981072 | edof:  11.7257 | nll test: 0.36906467
+sp= 7, lam= 1.5848932 | edof:   8.7034 | nll test: 0.36982561
+sp= 7, lam= 6.3095734 | edof:   6.4287 | nll test: 0.36904447
+sp= 7, lam=25.1188643 | edof:   4.9816 | nll test: 0.36858676
+sp= 7, lam=100.0000000 | edof:   4.3053 | nll test: 0.36894985
+
+   [CV] Mejor GAM: splines=4, lambda=0.1 | NLL CV=0.36832275
+
+4. CV para selección de hiperparámetros GLM...
+GLM | bines= 4x 4, alpha= 0.0000 | nll test: 0.37501910
+GLM | bines= 4x 4, alpha= 0.0000 | nll test: 0.37319032
+GLM | bines= 4x 4, alpha= 0.0000 | nll test: 0.37088965
+GLM | bines= 4x 4, alpha= 0.0001 | nll test: 0.36915631
+GLM | bines= 4x 4, alpha= 0.0003 | nll test: 0.36907464
+GLM | bines= 4x 4, alpha= 0.0010 | nll test: 0.36971390
+GLM | bines= 4x 4, alpha= 0.0040 | nll test: 0.37125817
+GLM | bines= 4x 4, alpha= 0.0158 | nll test: 0.37733122
+GLM | bines= 4x 4, alpha= 0.0631 | nll test: 0.39639075
+GLM | bines= 4x 4, alpha= 0.2512 | nll test: 0.46335528
+GLM | bines= 4x 4, alpha= 1.0000 | nll test: 0.62436653
+GLM | bines= 5x 5, alpha= 0.0000 | nll test: 0.38188172
+GLM | bines= 5x 5, alpha= 0.0000 | nll test: 0.37750296
+GLM | bines= 5x 5, alpha= 0.0000 | nll test: 0.37319008
+GLM | bines= 5x 5, alpha= 0.0001 | nll test: 0.36783395
+GLM | bines= 5x 5, alpha= 0.0003 | nll test: 0.36537839
+GLM | bines= 5x 5, alpha= 0.0010 | nll test: 0.36646518
+GLM | bines= 5x 5, alpha= 0.0040 | nll test: 0.36923659
+GLM | bines= 5x 5, alpha= 0.0158 | nll test: 0.37557976
+GLM | bines= 5x 5, alpha= 0.0631 | nll test: 0.39672782
+GLM | bines= 5x 5, alpha= 0.2512 | nll test: 0.46846981
+GLM | bines= 5x 5, alpha= 1.0000 | nll test: 0.63427950
+GLM | bines= 6x 6, alpha= 0.0000 | nll test: 0.39461838
+GLM | bines= 6x 6, alpha= 0.0000 | nll test: 0.38614566
+GLM | bines= 6x 6, alpha= 0.0000 | nll test: 0.37840132
+GLM | bines= 6x 6, alpha= 0.0001 | nll test: 0.37054620
+GLM | bines= 6x 6, alpha= 0.0003 | nll test: 0.36442367
+GLM | bines= 6x 6, alpha= 0.0010 | nll test: 0.36319185
+GLM | bines= 6x 6, alpha= 0.0040 | nll test: 0.36678436
+GLM | bines= 6x 6, alpha= 0.0158 | nll test: 0.37421337
+GLM | bines= 6x 6, alpha= 0.0631 | nll test: 0.39731768
+GLM | bines= 6x 6, alpha= 0.2512 | nll test: 0.47369162
+GLM | bines= 6x 6, alpha= 1.0000 | nll test: 0.64446795
+GLM | bines= 7x 7, alpha= 0.0000 | nll test: 0.40433208
+GLM | bines= 7x 7, alpha= 0.0000 | nll test: 0.39678492
+GLM | bines= 7x 7, alpha= 0.0000 | nll test: 0.38764407
+GLM | bines= 7x 7, alpha= 0.0001 | nll test: 0.37756303
+GLM | bines= 7x 7, alpha= 0.0003 | nll test: 0.36779164
+GLM | bines= 7x 7, alpha= 0.0010 | nll test: 0.36268560
+GLM | bines= 7x 7, alpha= 0.0040 | nll test: 0.36487915
+GLM | bines= 7x 7, alpha= 0.0158 | nll test: 0.37313318
+GLM | bines= 7x 7, alpha= 0.0631 | nll test: 0.39804434
+GLM | bines= 7x 7, alpha= 0.2512 | nll test: 0.47847196
+GLM | bines= 7x 7, alpha= 1.0000 | nll test: 0.65358730
+
+   [CV] Mejor GLM: bines=7x7, alpha=0.0010 | NLL CV=0.36268560
+
+5. Re-entrenando mejores modelos en todo el train pool...
+   GAM final entrenado (splines=4, lambda=0.1)
+   GLM final entrenado (bines=7, alpha=0.001)
+
+6. Evaluando en held-out set (2952 muestras)...
+
+   Modelo Nulo (tasa media = 0.0903):
+   NLL held-out nulo: 0.59187374
+
+============================================================
+  RESULTADOS FINALES EN HELD-OUT
+============================================================
+Métrica                      Modelo Nulo            GAM            GLM        
+-------------------------------------------------------------------
+NLL (held-out)                0.59187374     0.51963888     0.46649198        
+Pseudo R² (McFadden)                 ---       0.122044       0.211839        
+-------------------------------------------------------------------
+
+   Ganador: GLM (ventaja NLL: 0.05314690)
+   Pseudo R² GAM: 0.1220 (12.20% de varianza explicada vs. modelo nulo)       
+   Pseudo R² GLM: 0.2118 (21.18% de varianza explicada vs. modelo nulo)       
+
+Generando mapa de calor de NLL para GAM...
+Generando mapa de calor de NLL para GLM...
+
+### NEURONA 2
+
+============================================================
+  PIPELINE: CV + HELD-OUT + PSEUDO R²
+============================================================
+
+1. Cargando datos...
+   Total de muestras: 11952
+
+2. Partición unificada (held-out + CV folds con buffer de 2s)...
+   Bloques totales: 19 | Held-out: 4 | CV: 15
+   Train pool: 8880 muestras (74.3%)
+   Held-out:   2952 muestras (24.7%)
+   Fold 0: train=7080 | test=1800
+   Fold 1: train=6960 | test=1800
+   Fold 2: train=6960 | test=1800
+   Fold 3: train=6960 | test=1800
+   Fold 4: train=7080 | test=1800
+
+3. CV para selección de hiperparámetros GAM...
+sp= 4, lam= 0.0001000 | edof:  12.5736 | nll test: 0.46883715
+sp= 4, lam= 0.0003981 | edof:  11.5126 | nll test: 0.46935111
+sp= 4, lam= 0.0015849 | edof:  10.2317 | nll test: 0.47117855
+sp= 4, lam= 0.0063096 | edof:   8.7605 | nll test: 0.47362566
+sp= 4, lam= 0.0251189 | edof:   7.1935 | nll test: 0.47514860
+sp= 4, lam= 0.1000000 | edof:   5.8797 | nll test: 0.47617182
+sp= 4, lam= 0.3981072 | edof:   4.8667 | nll test: 0.47782754
+sp= 4, lam= 1.5848932 | edof:   4.2841 | nll test: 0.48018541
+sp= 4, lam= 6.3095734 | edof:   4.0771 | nll test: 0.48147644
+sp= 4, lam=25.1188643 | edof:   4.0198 | nll test: 0.48188999
+sp= 4, lam=100.0000000 | edof:   4.0050 | nll test: 0.48200084
+sp= 5, lam= 0.0001000 | edof:  21.0122 | nll test: 0.46330981
+sp= 5, lam= 0.0003981 | edof:  19.4528 | nll test: 0.46317754
+sp= 5, lam= 0.0015849 | edof:  17.4892 | nll test: 0.46321287
+sp= 5, lam= 0.0063096 | edof:  15.1050 | nll test: 0.46435175
+sp= 5, lam= 0.0251189 | edof:  12.4645 | nll test: 0.46749071
+sp= 5, lam= 0.1000000 | edof:   9.9162 | nll test: 0.47208982
+sp= 5, lam= 0.3981072 | edof:   7.8180 | nll test: 0.47489679
+sp= 5, lam= 1.5848932 | edof:   6.1406 | nll test: 0.47607762
+sp= 5, lam= 6.3095734 | edof:   4.9049 | nll test: 0.47804332
+sp= 5, lam=25.1188643 | edof:   4.2820 | nll test: 0.48041057
+sp= 5, lam=100.0000000 | edof:   4.0754 | nll test: 0.48156025
+sp= 6, lam= 0.0001000 | edof:  30.5702 | nll test: 0.46601725
+sp= 6, lam= 0.0003981 | edof:  28.3025 | nll test: 0.46495404
+sp= 6, lam= 0.0015849 | edof:  25.4297 | nll test: 0.46401742
+sp= 6, lam= 0.0063096 | edof:  21.9483 | nll test: 0.46317914
+sp= 6, lam= 0.0251189 | edof:  18.0902 | nll test: 0.46294555
+sp= 6, lam= 0.1000000 | edof:  14.4612 | nll test: 0.46479762
+sp= 6, lam= 0.3981072 | edof:  11.3590 | nll test: 0.46838819
+sp= 6, lam= 1.5848932 | edof:   8.6186 | nll test: 0.47226956
+sp= 6, lam= 6.3095734 | edof:   6.3696 | nll test: 0.47519379
+sp= 6, lam=25.1188643 | edof:   4.9032 | nll test: 0.47818787
+sp= 6, lam=100.0000000 | edof:   4.2657 | nll test: 0.48063425
+sp= 7, lam= 0.0001000 | edof:  41.6354 | nll test: 0.46861356
+sp= 7, lam= 0.0003981 | edof:  38.4430 | nll test: 0.46738280
+sp= 7, lam= 0.0015849 | edof:  34.5082 | nll test: 0.46619119
+sp= 7, lam= 0.0063096 | edof:  29.8471 | nll test: 0.46446320
+sp= 7, lam= 0.0251189 | edof:  24.7024 | nll test: 0.46302837
+sp= 7, lam= 0.1000000 | edof:  19.7640 | nll test: 0.46296007
+sp= 7, lam= 0.3981072 | edof:  15.2548 | nll test: 0.46476918
+sp= 7, lam= 1.5848932 | edof:  11.2655 | nll test: 0.46885621
+sp= 7, lam= 6.3095734 | edof:   8.0545 | nll test: 0.47302117
+sp= 7, lam=25.1188643 | edof:   5.7900 | nll test: 0.47627190
+sp= 7, lam=100.0000000 | edof:   4.5890 | nll test: 0.47944429
+
+   [CV] Mejor GAM: splines=6, lambda=0.025118864315095794 | NLL CV=0.46294555 
+
+4. CV para selección de hiperparámetros GLM...
+GLM | bines= 4x 4, alpha= 0.0000 | nll test: 0.46672365
+GLM | bines= 4x 4, alpha= 0.0000 | nll test: 0.46666689
+GLM | bines= 4x 4, alpha= 0.0000 | nll test: 0.46649060
+GLM | bines= 4x 4, alpha= 0.0001 | nll test: 0.46642030
+GLM | bines= 4x 4, alpha= 0.0003 | nll test: 0.46662210
+GLM | bines= 4x 4, alpha= 0.0010 | nll test: 0.46744838
+GLM | bines= 4x 4, alpha= 0.0040 | nll test: 0.46966702
+GLM | bines= 4x 4, alpha= 0.0158 | nll test: 0.47533272
+GLM | bines= 4x 4, alpha= 0.0631 | nll test: 0.49079642
+GLM | bines= 4x 4, alpha= 0.2512 | nll test: 0.53898812
+GLM | bines= 4x 4, alpha= 1.0000 | nll test: 0.66454927
+GLM | bines= 5x 5, alpha= 0.0000 | nll test: 0.46541477
+GLM | bines= 5x 5, alpha= 0.0000 | nll test: 0.46484483
+GLM | bines= 5x 5, alpha= 0.0000 | nll test: 0.46414668
+GLM | bines= 5x 5, alpha= 0.0001 | nll test: 0.46391272
+GLM | bines= 5x 5, alpha= 0.0003 | nll test: 0.46369117
+GLM | bines= 5x 5, alpha= 0.0010 | nll test: 0.46437466
+GLM | bines= 5x 5, alpha= 0.0040 | nll test: 0.46662906
+GLM | bines= 5x 5, alpha= 0.0158 | nll test: 0.47262665
+GLM | bines= 5x 5, alpha= 0.0631 | nll test: 0.48927962
+GLM | bines= 5x 5, alpha= 0.2512 | nll test: 0.54120868
+GLM | bines= 5x 5, alpha= 1.0000 | nll test: 0.67156090
+GLM | bines= 6x 6, alpha= 0.0000 | nll test: 0.46838444
+GLM | bines= 6x 6, alpha= 0.0000 | nll test: 0.46752626
+GLM | bines= 6x 6, alpha= 0.0000 | nll test: 0.46588324
+GLM | bines= 6x 6, alpha= 0.0001 | nll test: 0.46478037
+GLM | bines= 6x 6, alpha= 0.0003 | nll test: 0.46426570
+GLM | bines= 6x 6, alpha= 0.0010 | nll test: 0.46395244
+GLM | bines= 6x 6, alpha= 0.0040 | nll test: 0.46511339
+GLM | bines= 6x 6, alpha= 0.0158 | nll test: 0.47103945
+GLM | bines= 6x 6, alpha= 0.0631 | nll test: 0.48921352
+GLM | bines= 6x 6, alpha= 0.2512 | nll test: 0.54492938
+GLM | bines= 6x 6, alpha= 1.0000 | nll test: 0.67987265
+GLM | bines= 7x 7, alpha= 0.0000 | nll test: 0.47049998
+GLM | bines= 7x 7, alpha= 0.0000 | nll test: 0.46875709
+GLM | bines= 7x 7, alpha= 0.0000 | nll test: 0.46731161
+GLM | bines= 7x 7, alpha= 0.0001 | nll test: 0.46577902
+GLM | bines= 7x 7, alpha= 0.0003 | nll test: 0.46480590
+GLM | bines= 7x 7, alpha= 0.0010 | nll test: 0.46425757
+GLM | bines= 7x 7, alpha= 0.0040 | nll test: 0.46471154
+GLM | bines= 7x 7, alpha= 0.0158 | nll test: 0.47040006
+GLM | bines= 7x 7, alpha= 0.0631 | nll test: 0.48995398
+GLM | bines= 7x 7, alpha= 0.2512 | nll test: 0.54904016
+GLM | bines= 7x 7, alpha= 1.0000 | nll test: 0.68784945
+
+   [CV] Mejor GLM: bines=5x5, alpha=0.0003 | NLL CV=0.46369117
+
+5. Re-entrenando mejores modelos en todo el train pool...
+   GAM final entrenado (splines=6, lambda=0.025118864315095794)
+   GLM final entrenado (bines=5, alpha=0.00025118864315095795)
+
+6. Evaluando en held-out set (2952 muestras)...
+
+   Modelo Nulo (tasa media = 0.1688):
+   NLL held-out nulo: 0.68459376
+
+   Modelo Nulo (tasa media = 0.1688):
+   NLL held-out nulo: 0.68459376
+
+
+============================================================
+  RESULTADOS FINALES EN HELD-OUT
+============================================================
+Métrica                      Modelo Nulo            GAM            GLM        
+-------------------------------------------------------------------
+NLL (held-out)                0.68459376     0.62002500     0.62259077        
+Pseudo R² (McFadden)                 ---       0.094317       0.090569        
+-------------------------------------------------------------------
+
+   Ganador: GAM (ventaja NLL: 0.00256577)
+   Pseudo R² GAM: 0.0943 (9.43% de varianza explicada vs. modelo nulo)        
+   Pseudo R² GLM: 0.0906 (9.06% de varianza explicada vs. modelo nulo)        
+
+Generando mapa de calor de NLL para GAM...
+Generando mapa de calor de NLL para GLM...

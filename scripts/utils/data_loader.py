@@ -53,25 +53,6 @@ def _cargar_datos_neurona(sesion, tetrodo, neurona):
     
     return pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula
 
-def _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video):
-    """
-    aplica filtro gaussiano a la trayectoria para eliminar el ruido del tracking 
-    y recalcula la velocidad con las posiciones suavizadas.
-    """
-    from scipy.ndimage import gaussian_filter1d
-    sigma_frames = 1
-    pos_x = gaussian_filter1d(pos_x, sigma=sigma_frames) 
-    # NOTE: Me dijo emilio que no usan gaussianas, usan otro que usa estimaciones bayesianas .....
-    # Además, lo datos ya estan filtrados. hay que omitir esto. dejo la funcion para recordar esto
-    pos_y = gaussian_filter1d(pos_y, sigma=sigma_frames)
-    
-    dx = np.diff(pos_x)
-    dy = np.diff(pos_y)
-    dt = np.maximum(np.diff(pos_t), 1e-6)
-    vel = np.append(np.sqrt(dx**2 + dy**2) / dt, 0)
-    
-    return pos_x, pos_y, vel
-
 def preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec):
     pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
     # pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
@@ -92,18 +73,20 @@ def preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec):
     
     return X, Y
 
-def preparar_datos_viewpoint_1d(sesion, tetrodo, neurona, bin_size_sec=0.1):
+def preparar_datos_head_direction(sesion, tetrodo, neurona, bin_size_sec=0.1, min_vel=2.0):
     """
-    calcula el punto de intersección de la mirada y "desenrolla" la caja 
-    en un perímetro 1d continuo (0 a perímetro total).
+    carga y prepara la dirección de la cabeza (head direction, hd) y los spikes correspondientes.
+    
+    args:
+        sesion, tetrodo, neurona: identificadores de la neurona.
+        bin_size_sec: tamaño del bin temporal (por defecto 0.1s).
+        min_vel: velocidad mínima para filtrar la actividad estática (por defecto 2.0 cm/s).
+        
+    returns:
+        ang_bins_deg: array de la dirección de la cabeza en grados (0 a 360).
+        conteo_spikes: array con el conteo de spikes en cada bin de tiempo.
     """
     pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
-    # pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
-    
-    x_min, x_max = np.min(pos_x), np.max(pos_x)
-    y_min, y_max = np.min(pos_y), np.max(pos_y)
-    W = x_max - x_min
-    H = y_max - y_min
     
     # cargar head direction (hd) real desde la base de datos
     file = h5py.File(db_merged, 'r')
@@ -113,54 +96,71 @@ def preparar_datos_viewpoint_1d(sesion, tetrodo, neurona, bin_size_sec=0.1):
     # el tracking puede tener ángulos con wrap en -pi/pi, los unwrap-eamos para interpolar bien
     angulo = np.unwrap(angulo)
     
-    # 4. binning temporal
+    # binning temporal
     bins_tiempo = np.arange(pos_t[0], pos_t[-1], bin_size_sec)
     centros_bins = bins_tiempo[:-1] + (bin_size_sec / 2)
     
     conteo_spikes, _ = np.histogram(tiempos_celula, bins=bins_tiempo)
     
+    # interpolamos los ángulos y velocidades a los centros de los bins
+    ang_bins = np.interp(centros_bins, pos_t, angulo)
+    vel_bins = np.interp(centros_bins, pos_t, vel)
+    
+    # convertimos a grados y envolvemos en [0, 360)
+    ang_bins_deg = np.degrees(ang_bins) % 360
+    
+    # filtramos por velocidad mínima si se especifica
+    if min_vel > 0:
+        mascara_vel = vel_bins > min_vel
+        ang_bins_deg = ang_bins_deg[mascara_vel]
+        conteo_spikes = conteo_spikes[mascara_vel]
+        
+    return ang_bins_deg, conteo_spikes
+
+def preparar_datos_mirada(sesion, tetrodo, neurona, bin_size_sec=0.1, min_vel=2.0):
+    """
+    carga y prepara la trayectoria 2D del animal, su dirección de cabeza (HD) en radianes
+    y los spikes correspondientes.
+    
+    args:
+        sesion, tetrodo, neurona: identificadores de la neurona.
+        bin_size_sec: tamaño del bin temporal.
+        min_vel: velocidad mínima para filtrar la actividad estática.
+        
+    returns:
+        x_bins: array de la posición X del animal por bin.
+        y_bins: array de la posición Y del animal por bin.
+        ang_bins: array de la dirección de la cabeza en radianes por bin.
+        conteo_spikes: array con el conteo de spikes en cada bin.
+    """
+    pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
+    
+    # cargar head direction (hd) real desde la base de datos
+    file = h5py.File(db_merged, 'r')
+    angulo = np.array(file[f'pos_{sesion}']['hd']).flatten()
+    file.close()
+    
+    # unwrap para interpolación correcta
+    angulo = np.unwrap(angulo)
+    
+    # binning temporal
+    bins_tiempo = np.arange(pos_t[0], pos_t[-1], bin_size_sec)
+    centros_bins = bins_tiempo[:-1] + (bin_size_sec / 2)
+    
+    conteo_spikes, _ = np.histogram(tiempos_celula, bins=bins_tiempo)
+    
+    # interpolamos los ángulos, posiciones y velocidades a los centros de los bins
     x_bins = np.interp(centros_bins, pos_t, pos_x)
     y_bins = np.interp(centros_bins, pos_t, pos_y)
     ang_bins = np.interp(centros_bins, pos_t, angulo)
     vel_bins = np.interp(centros_bins, pos_t, vel)
     
-    # 5. ray casting (intersección con la pared 2d)
-    vx = np.cos(ang_bins)
-    vy = np.sin(ang_bins)
-    vx[vx == 0] = 1e-10
-    vy[vy == 0] = 1e-10
-    
-    tx = np.where(vx > 0, (x_max - x_bins) / vx, (x_min - x_bins) / vx)
-    ty = np.where(vy > 0, (y_max - y_bins) / vy, (y_min - y_bins) / vy)
-    
-    t_hit = np.minimum(tx, ty)
-    mirada_x = x_bins + t_hit * vx
-    mirada_y = y_bins + t_hit * vy
-    
-    # 6. desenrollar la caja a 1d
-    # perímetro p va de 0 a 2w + 2h
-    p_mirada = np.zeros_like(mirada_x)
-    tol = 1e-3 # tolerancia flotante
-    
-    # abajo (y_min) [0 a w]
-    mask_bottom = np.abs(mirada_y - y_min) < tol
-    p_mirada[mask_bottom] = mirada_x[mask_bottom] - x_min
-    
-    # derecha (x_max) [w a w+h]
-    mask_right = np.abs(mirada_x - x_max) < tol
-    p_mirada[mask_right] = W + (mirada_y[mask_right] - y_min)
-    
-    # arriba (y_max) [w+h a 2w+h] -> derecha a izquierda
-    mask_top = np.abs(mirada_y - y_max) < tol
-    p_mirada[mask_top] = W + H + (x_max - mirada_x[mask_top])
-    
-    # izquierda (x_min) [2w+h a 2w+2h] -> arriba a abajo
-    mask_left = np.abs(mirada_x - x_min) < tol
-    p_mirada[mask_left] = 2*W + H + (y_max - mirada_y[mask_left])
-    
-    mascara_vel = vel_bins > 2.0
-    
-    X = p_mirada[mascara_vel].reshape(-1, 1)
-    Y = conteo_spikes[mascara_vel]
-    
-    return X, Y, W, H
+    # filtramos por velocidad mínima si se especifica
+    if min_vel > 0:
+        mascara_vel = vel_bins > min_vel
+        x_bins = x_bins[mascara_vel]
+        y_bins = y_bins[mascara_vel]
+        ang_bins = ang_bins[mascara_vel]
+        conteo_spikes = conteo_spikes[mascara_vel]
+        
+    return x_bins, y_bins, ang_bins, conteo_spikes

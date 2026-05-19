@@ -1,6 +1,6 @@
 """
 métodos:
-- glm_posicion_manual: implementa un glm manual desde cero usando campanas de gauss.
+- glm_position: implementa un glm manual desde cero usando campanas de gauss.
 - get_gam_posicion: entrena o carga un modelo gam (pygam) poisson para posición 2d.
 - graficar_gam_posicion: visualiza los resultados espaciales y temporales del gam de posición.
 - get_gam_viewpoint_1d: entrena o carga un modelo gam cíclico para la mirada en el perímetro 1d.
@@ -13,11 +13,11 @@ import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from pygam import PoissonGAM, te, s
 try:
-    from .data_loader import preparar_datos_posicion, preparar_datos_viewpoint_1d
+    from .data_loader import preparar_datos_posicion
 except ImportError:
-    from data_loader import preparar_datos_posicion, preparar_datos_viewpoint_1d
+    from data_loader import preparar_datos_posicion
 
-def glm_posicion_manual(sesion, tetrodo, neurona, n_bines=36):
+def glm_position(sesion, tetrodo, neurona, n_bines=36, alpha=0.01):
     print("\n--- INICIANDO GLM ---")
     X, Y = preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec=0.1)
     
@@ -44,7 +44,7 @@ def glm_posicion_manual(sesion, tetrodo, neurona, n_bines=36):
     X_glm_pos = sm.add_constant(X_bases_pos)
     
     # solución: "regularización" (ridge)
-    modelo = sm.GLM(Y, X_glm_pos, family=sm.families.Poisson()).fit_regularized(alpha=0.1, L1_wt=0.0)
+    modelo = sm.GLM(Y, X_glm_pos, family=sm.families.Poisson()).fit_regularized(alpha=alpha, L1_wt=0.0)
     print("Modelo entrenado")
 
     # --- graficar ---
@@ -71,7 +71,7 @@ def glm_posicion_manual(sesion, tetrodo, neurona, n_bines=36):
     # le agregamos bordes negros para que los bines sean 100% distinguibles
     mesh = ax.pcolormesh(x_grid, y_grid, prediccion_pos, cmap='jet', shading='nearest', linewidth=0.5)
     fig.colorbar(mesh, ax=ax, label='Tasa de Disparo (Spikes/Bin)')
-    ax.set_title(f'GLM (Píxeles): {n_bines}x{n_bines} | s={sesion} t={tetrodo} c={neurona}')
+    ax.set_title(f'GLM: {n_bines}x{n_bines} | s={sesion} t={tetrodo} c={neurona}')
     ax.axis('equal')
     
     plt.tight_layout()
@@ -170,72 +170,6 @@ def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, b
     
     ax2.set_ylim(0, max_visible + 1)
     ax2.legend()
-    
-    plt.tight_layout()
-    plt.show()
-
-def get_gam_viewpoint_1d(sesion, tetrodo, neurona, splines=20, bin_size_sec=0.1, force_retrain=False):
-    archivo_modelo = f'modelo_gam_vp1d_s{sesion}_t{tetrodo}_n{neurona}_sp{splines}.pkl'
-    X, Y, W, H = preparar_datos_viewpoint_1d(sesion, tetrodo, neurona, bin_size_sec)
-    
-    if os.path.exists(archivo_modelo) and not force_retrain:
-        print(f"[+] Cargando GAM Viewpoint 1D desde {archivo_modelo}...")
-        with open(archivo_modelo, 'rb') as f:
-            modelo_gam = pickle.load(f)
-    else:
-        print(f"[-] Entrenando GAM Viewpoint 1D ({splines} splines)...")
-        modelo_gam = PoissonGAM(s(0, basis='cp', n_splines=splines)).gridsearch(X, Y, progress=False)
-        with open(archivo_modelo, 'wb') as f:
-            pickle.dump(modelo_gam, f)
-            
-    print("\n=== RESUMEN GAM 1D ===")
-    modelo_gam.summary()
-    return modelo_gam, X, Y, W, H
-
-def graficar_gam_viewpoint_1d(modelo_gam, X, Y, W, H, sesion, tetrodo, neurona):
-    """
-    grafica el "mapa de pared" desenrollado.
-    """
-    perimetro_total = 2*W + 2*H
-    
-    XX_pred = np.linspace(0, perimetro_total, 200).reshape(-1, 1)
-    YY_pred = modelo_gam.predict(XX_pred)
-    intervalos = modelo_gam.confidence_intervals(XX_pred, width=.95)
-    
-    fig, ax = plt.subplots(figsize=(12, 5))
-    
-    # tasa empírica (barras grises de fondo)
-    n_bins = 50
-    bins_perimetro = np.linspace(0, perimetro_total, n_bins+1)
-    spikes_sect, _ = np.histogram(X.flatten(), bins=bins_perimetro, weights=Y)
-    tiempo_sect, _ = np.histogram(X.flatten(), bins=bins_perimetro)
-    
-    tiempo_sect = np.maximum(tiempo_sect, 1)
-    tasa_cruda = spikes_sect / (tiempo_sect * 0.1)
-    
-    ax.bar(bins_perimetro[:-1], tasa_cruda, width=bins_perimetro[1]-bins_perimetro[0], 
-            color='gray', alpha=0.3, align='edge')
-    
-    # predicción gam (línea roja)
-    ax.fill_between(XX_pred.flatten(), intervalos[:, 0], intervalos[:, 1], color='red', alpha=0.2)
-    ax.plot(XX_pred.flatten(), YY_pred, color='red', linewidth=2)
-    
-    # paredes
-    esquinas = [0, W, W+H, 2*W+H, perimetro_total]
-    nombres_paredes = ['Pared Abajo', 'Pared Derecha', 'Pared Arriba', 'Pared Izquierda']
-    
-    for e in esquinas:
-        ax.axvline(e, color='black', linestyle='--', linewidth=2)
-        
-    for i in range(4):
-        midpoint = (esquinas[i] + esquinas[i+1]) / 2
-        ax.text(midpoint, ax.get_ylim()[1]*0.9, nombres_paredes[i], 
-                ha='center', va='top', fontsize=10, fontweight='bold', color='black')
-        
-    ax.set_xlim(0, perimetro_total)
-    ax.set_title(f"Viewpoint Mapeado al Perímetro de la Caja (1D GAM Cíclico)\nS={sesion} T={tetrodo} C={neurona} | EDoF: {modelo_gam.statistics_['edof']:.1f}")
-    ax.set_xlabel("Distancia a lo largo del perímetro (cm o unidades)")
-    ax.set_ylabel("Frecuencia de Disparo Predicha")
     
     plt.tight_layout()
     plt.show()
