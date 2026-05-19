@@ -73,14 +73,13 @@ def preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec):
     
     return X, Y
 
-def preparar_datos_head_direction(sesion, tetrodo, neurona, bin_size_sec=0.1, min_vel=2.0):
+def preparar_datos_head_direction(sesion, tetrodo, neurona, bin_size_sec=0.1):
     """
     carga y prepara la dirección de la cabeza (head direction, hd) y los spikes correspondientes.
     
     args:
         sesion, tetrodo, neurona: identificadores de la neurona.
         bin_size_sec: tamaño del bin temporal (por defecto 0.1s).
-        min_vel: velocidad mínima para filtrar la actividad estática (por defecto 2.0 cm/s).
         
     returns:
         ang_bins_deg: array de la dirección de la cabeza en grados (0 a 360).
@@ -102,18 +101,19 @@ def preparar_datos_head_direction(sesion, tetrodo, neurona, bin_size_sec=0.1, mi
     
     conteo_spikes, _ = np.histogram(tiempos_celula, bins=bins_tiempo)
     
-    # interpolamos los ángulos y velocidades a los centros de los bins
+    # interpolamos los ángulos a los centros de los bins
     ang_bins = np.interp(centros_bins, pos_t, angulo)
-    vel_bins = np.interp(centros_bins, pos_t, vel)
-    
+        
     # convertimos a grados y envolvemos en [0, 360)
     ang_bins_deg = np.degrees(ang_bins) % 360
     
-    # filtramos por velocidad mínima si se especifica
-    if min_vel > 0:
-        mascara_vel = vel_bins > min_vel
-        ang_bins_deg = ang_bins_deg[mascara_vel]
-        conteo_spikes = conteo_spikes[mascara_vel]
+    # filtramos por velocidad mínima
+    # vel_bins = np.interp(centros_bins, pos_t, vel)
+    # NOTE: Omito este análisis
+    # if min_vel > 0:
+    #     mascara_vel = vel_bins > min_vel
+    #     ang_bins_deg = ang_bins_deg[mascara_vel]
+    #     conteo_spikes = conteo_spikes[mascara_vel]
         
     return ang_bins_deg, conteo_spikes
 

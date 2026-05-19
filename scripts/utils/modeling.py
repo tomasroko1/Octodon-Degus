@@ -24,7 +24,6 @@ def glm_position(sesion, tetrodo, neurona, n_bines=36, alpha=0.01):
     pos_x = X[:, 0]
     pos_y = X[:, 1]
     
-    print(f"Construyendo Basis Functions (Grilla de {n_bines}x{n_bines} Campanas Gauss)...")
     n_bases_x = n_bines
     n_bases_y = n_bines
     centros_x = np.linspace(np.min(pos_x), np.max(pos_x), n_bases_x)

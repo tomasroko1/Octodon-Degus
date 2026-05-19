@@ -319,9 +319,25 @@ def predict_glm_on_new_data(modelo_glm, X_new, centros_x, centros_y, sigma_pos):
 
 def plot_cv_heatmap(error_matrix, x_grid, y_grid, title='Negative Log-Likelihood (Blue is Better - Lower Error)', xlabel='lambda (Smoothing)', ylabel='n_splines (Resolution)'):
     """Grafica el mapa de calor de los errores de validación cruzada."""
+    x_labels = []
+    for val in x_grid:
+        try:
+            val_float = float(val)
+            x_labels.append(f"{val_float:.4g}")
+        except (ValueError, TypeError):
+            x_labels.append(str(val))
+
+    y_labels = []
+    for val in y_grid:
+        try:
+            val_float = float(val)
+            y_labels.append(f"{val_float:.4g}")
+        except (ValueError, TypeError):
+            y_labels.append(str(val))
+
     plt.figure(figsize=(10, 7))
     sns.heatmap(error_matrix, annot=True, fmt=".6f", 
-                xticklabels=x_grid, yticklabels=y_grid,
+                xticklabels=x_labels, yticklabels=y_labels,
                 cmap='jet')
     plt.title(title)
     plt.xlabel(xlabel)
@@ -330,153 +346,153 @@ def plot_cv_heatmap(error_matrix, x_grid, y_grid, title='Negative Log-Likelihood
     plt.show()
 
 
-def main():
-    print("=" * 60)
-    print("  PIPELINE: CV + HELD-OUT + PSEUDO R²")
-    print("=" * 60)
+# def main():
+#     print("=" * 60)
+#     print("  PIPELINE: CV + HELD-OUT + PSEUDO R²")
+#     print("=" * 60)
     
-    # ==========================================
-    # 1. CARGAR DATOS
-    # ==========================================
-    print("\n1. Cargando datos...")
-    sesion, tetrodo, neurona = 2, 3, 2
-    bin_size = 0.1
-    X, Y = preparar_datos_posicion(sesion, tetrodo, neurona, bin_size)
-    print(f"   Total de muestras: {len(X)}")
+#     # ==========================================
+#     # 1. CARGAR DATOS
+#     # ==========================================
+#     print("\n1. Cargando datos...")
+#     sesion, tetrodo, neurona = 2, 3, 2
+#     bin_size = 0.1
+#     X, Y = preparar_datos_posicion(sesion, tetrodo, neurona, bin_size)
+#     print(f"   Total de muestras: {len(X)}")
 
-    # ==========================================
-    # 2. PARTICIÓN UNIFICADA: HELD-OUT + FOLDS DE CV
-    #    (Todo se asigna sobre la línea de tiempo original para evitar
-    #     distorsión temporal en los buffers)
-    # ==========================================
-    print("\n2. Partición unificada (held-out + CV folds con buffer de 2s)...")
-    folds, held_out_idx, train_pool_idx, roles = generate_all_splits(
-        n_muestras=len(X),
-        bin_size_sec=bin_size,
-        block_size_sec=60,
-        n_folds=5,
-        buffer_sec=2
-    )
+#     # ==========================================
+#     # 2. PARTICIÓN UNIFICADA: HELD-OUT + FOLDS DE CV
+#     #    (Todo se asigna sobre la línea de tiempo original para evitar
+#     #     distorsión temporal en los buffers)
+#     # ==========================================
+#     print("\n2. Partición unificada (held-out + CV folds con buffer de 2s)...")
+#     folds, held_out_idx, train_pool_idx, roles = generate_all_splits(
+#         n_muestras=len(X),
+#         bin_size_sec=bin_size,
+#         block_size_sec=60,
+#         n_folds=5,
+#         buffer_sec=2
+#     )
     
-    X_pool, Y_pool = X[train_pool_idx], Y[train_pool_idx]
-    X_held, Y_held = X[held_out_idx], Y[held_out_idx]
+#     X_pool, Y_pool = X[train_pool_idx], Y[train_pool_idx]
+#     X_held, Y_held = X[held_out_idx], Y[held_out_idx]
     
-    n_held_out_bloques = np.sum(roles == -1)
-    n_cv_bloques = np.sum(roles >= 0)
-    print(f"   Bloques totales: {len(roles)} | Held-out: {n_held_out_bloques} | CV: {n_cv_bloques}")
-    print(f"   Train pool: {len(X_pool)} muestras ({100*len(X_pool)/len(X):.1f}%)")
-    print(f"   Held-out:   {len(X_held)} muestras ({100*len(X_held)/len(X):.1f}%)")
-    for k, (tr, te) in enumerate(folds):
-        print(f"   Fold {k}: train={len(tr)} | test={len(te)}")
+#     n_held_out_bloques = np.sum(roles == -1)
+#     n_cv_bloques = np.sum(roles >= 0)
+#     print(f"   Bloques totales: {len(roles)} | Held-out: {n_held_out_bloques} | CV: {n_cv_bloques}")
+#     print(f"   Train pool: {len(X_pool)} muestras ({100*len(X_pool)/len(X):.1f}%)")
+#     print(f"   Held-out:   {len(X_held)} muestras ({100*len(X_held)/len(X):.1f}%)")
+#     for k, (tr, te) in enumerate(folds):
+#         print(f"   Fold {k}: train={len(tr)} | test={len(te)}")
 
-    # ==========================================
-    # 3. CV PARA SELECCIÓN DE HIPERPARÁMETROS - GAM
-    # ==========================================
-    print(f"\n3. CV para selección de hiperparámetros GAM...")
-    splines_a_probar = [4, 5, 6, 7]
-    #lambdas_a_probar = [0.01, 0.1, 0.5]
-    lambdas_a_probar = np.logspace(-4, 2, 11)
+#     # ==========================================
+#     # 3. CV PARA SELECCIÓN DE HIPERPARÁMETROS - GAM
+#     # ==========================================
+#     print(f"\n3. CV para selección de hiperparámetros GAM...")
+#     splines_a_probar = [4, 5, 6, 7]
+#     #lambdas_a_probar = [0.01, 0.1, 0.5]
+#     lambdas_a_probar = np.logspace(-4, 2, 11)
     
-    error_matrix_gam, resultados_gam = cross_validate_gam_grid(
-        X, Y, folds, splines_a_probar, lambdas_a_probar
-    )
+#     error_matrix_gam, resultados_gam = cross_validate_gam_grid(
+#         X, Y, folds, splines_a_probar, lambdas_a_probar
+#     )
     
-    mejor_gam_cv = sorted(resultados_gam, key=lambda x: x[3])[0]
-    best_sp, best_lam = int(mejor_gam_cv[0]), mejor_gam_cv[1]
-    print(f"\n   [CV] Mejor GAM: splines={best_sp}, lambda={best_lam} | NLL CV={mejor_gam_cv[3]:.8f}")
+#     mejor_gam_cv = sorted(resultados_gam, key=lambda x: x[3])[0]
+#     best_sp, best_lam = int(mejor_gam_cv[0]), mejor_gam_cv[1]
+#     print(f"\n   [CV] Mejor GAM: splines={best_sp}, lambda={best_lam} | NLL CV={mejor_gam_cv[3]:.8f}")
 
-    # ==========================================
-    # 4. CV PARA SELECCIÓN DE HIPERPARÁMETROS - GLM
-    # ==========================================
-    print(f"\n4. CV para selección de hiperparámetros GLM...")
-    bines_a_probar = [4, 5, 6, 7]
-    #alphas_a_probar = [0.00010, 0.00015, 0.00020]
-    alphas_a_probar = np.logspace(-6, 0, 11)
+#     # ==========================================
+#     # 4. CV PARA SELECCIÓN DE HIPERPARÁMETROS - GLM
+#     # ==========================================
+#     print(f"\n4. CV para selección de hiperparámetros GLM...")
+#     bines_a_probar = [4, 5, 6, 7]
+#     #alphas_a_probar = [0.00010, 0.00015, 0.00020]
+#     alphas_a_probar = np.logspace(-6, 0, 11)
 
-    error_matrix_glm, resultados_glm = cross_validate_glm_grid(
-        X, Y, folds, bines_a_probar, alphas_a_probar
-    )
+#     error_matrix_glm, resultados_glm = cross_validate_glm_grid(
+#         X, Y, folds, bines_a_probar, alphas_a_probar
+#     )
     
-    mejor_glm_cv = sorted(resultados_glm, key=lambda x: x[2])[0]
-    best_bines, best_alpha = int(mejor_glm_cv[0]), mejor_glm_cv[1]
-    print(f"\n   [CV] Mejor GLM: bines={best_bines}x{best_bines}, alpha={best_alpha:.4f} | NLL CV={mejor_glm_cv[2]:.8f}")
+#     mejor_glm_cv = sorted(resultados_glm, key=lambda x: x[2])[0]
+#     best_bines, best_alpha = int(mejor_glm_cv[0]), mejor_glm_cv[1]
+#     print(f"\n   [CV] Mejor GLM: bines={best_bines}x{best_bines}, alpha={best_alpha:.4f} | NLL CV={mejor_glm_cv[2]:.8f}")
 
-    # ==========================================
-    # 5. RE-ENTRENAR MEJORES MODELOS EN TODO EL TRAIN POOL
-    # ==========================================
-    print(f"\n5. Re-entrenando mejores modelos en todo el train pool...")
+#     # ==========================================
+#     # 5. RE-ENTRENAR MEJORES MODELOS EN TODO EL TRAIN POOL
+#     # ==========================================
+#     print(f"\n5. Re-entrenando mejores modelos en todo el train pool...")
     
-    gam_final = retrain_best_gam(X_pool, Y_pool, best_sp, best_lam)
-    print(f"   GAM final entrenado (splines={best_sp}, lambda={best_lam})")
+#     gam_final = retrain_best_gam(X_pool, Y_pool, best_sp, best_lam)
+#     print(f"   GAM final entrenado (splines={best_sp}, lambda={best_lam})")
     
-    glm_final, cx, cy, sigma = retrain_best_glm(X_pool, Y_pool, best_bines, best_alpha)
-    print(f"   GLM final entrenado (bines={best_bines}, alpha={best_alpha})")
+#     glm_final, cx, cy, sigma = retrain_best_glm(X_pool, Y_pool, best_bines, best_alpha)
+#     print(f"   GLM final entrenado (bines={best_bines}, alpha={best_alpha})")
 
-    # ==========================================
-    # 6. EVALUACIÓN EN HELD-OUT: NLL + PSEUDO R²
-    # ==========================================
-    print(f"\n6. Evaluando en held-out set ({len(X_held)} muestras)...")
+#     # ==========================================
+#     # 6. EVALUACIÓN EN HELD-OUT: NLL + PSEUDO R²
+#     # ==========================================
+#     print(f"\n6. Evaluando en held-out set ({len(X_held)} muestras)...")
     
-    # Modelo nulo: tasa media del train pool
-    nll_nulo = null_model_nll(Y_pool, Y_held)
-    print(f"\n   Modelo Nulo (tasa media = {np.mean(Y_pool):.4f}):")
-    print(f"   NLL held-out nulo: {nll_nulo:.8f}")
+#     # Modelo nulo: tasa media del train pool
+#     nll_nulo = null_model_nll(Y_pool, Y_held)
+#     print(f"\n   Modelo Nulo (tasa media = {np.mean(Y_pool):.4f}):")
+#     print(f"   NLL held-out nulo: {nll_nulo:.8f}")
     
-    # GAM en held-out
-    mu_gam = gam_final.predict(X_held)
-    nll_gam_held = poisson_nll_per_sample(Y_held, mu_gam)
-    r2_gam = pseudo_r2_mcfadden(nll_gam_held, nll_nulo)
+#     # GAM en held-out
+#     mu_gam = gam_final.predict(X_held)
+#     nll_gam_held = poisson_nll_per_sample(Y_held, mu_gam)
+#     r2_gam = pseudo_r2_mcfadden(nll_gam_held, nll_nulo)
     
-    # GLM en held-out
-    mu_glm = predict_glm_on_new_data(glm_final, X_held, cx, cy, sigma)
-    nll_glm_held = poisson_nll_per_sample(Y_held, mu_glm)
-    r2_glm = pseudo_r2_mcfadden(nll_glm_held, nll_nulo)
+#     # GLM en held-out
+#     mu_glm = predict_glm_on_new_data(glm_final, X_held, cx, cy, sigma)
+#     nll_glm_held = poisson_nll_per_sample(Y_held, mu_glm)
+#     r2_glm = pseudo_r2_mcfadden(nll_glm_held, nll_nulo)
 
-    # ==========================================
-    # 7. REPORTE FINAL
-    # ==========================================
-    print("\n" + "=" * 60)
-    print("  RESULTADOS FINALES EN HELD-OUT")
-    print("=" * 60)
-    print(f"{'Métrica':<25} {'Modelo Nulo':>14} {'GAM':>14} {'GLM':>14}")
-    print("-" * 67)
-    print(f"{'NLL (held-out)':<25} {nll_nulo:>14.8f} {nll_gam_held:>14.8f} {nll_glm_held:>14.8f}")
-    print(f"{'Pseudo R² (McFadden)':<25} {'---':>14} {r2_gam:>14.6f} {r2_glm:>14.6f}")
-    print("-" * 67)
+#     # ==========================================
+#     # 7. REPORTE FINAL
+#     # ==========================================
+#     print("\n" + "=" * 60)
+#     print("  RESULTADOS FINALES EN HELD-OUT")
+#     print("=" * 60)
+#     print(f"{'Métrica':<25} {'Modelo Nulo':>14} {'GAM':>14} {'GLM':>14}")
+#     print("-" * 67)
+#     print(f"{'NLL (held-out)':<25} {nll_nulo:>14.8f} {nll_gam_held:>14.8f} {nll_glm_held:>14.8f}")
+#     print(f"{'Pseudo R² (McFadden)':<25} {'---':>14} {r2_gam:>14.6f} {r2_glm:>14.6f}")
+#     print("-" * 67)
     
-    if nll_gam_held < nll_glm_held:
-        ganador = "GAM"
-        diff = nll_glm_held - nll_gam_held
-    else:
-        ganador = "GLM"
-        diff = nll_gam_held - nll_glm_held
+#     if nll_gam_held < nll_glm_held:
+#         ganador = "GAM"
+#         diff = nll_glm_held - nll_gam_held
+#     else:
+#         ganador = "GLM"
+#         diff = nll_gam_held - nll_glm_held
     
-    print(f"\n   Ganador: {ganador} (ventaja NLL: {diff:.8f})")
-    print(f"   Pseudo R² GAM: {r2_gam:.4f} ({r2_gam*100:.2f}% de varianza explicada vs. modelo nulo)")
-    print(f"   Pseudo R² GLM: {r2_glm:.4f} ({r2_glm*100:.2f}% de varianza explicada vs. modelo nulo)")
+#     print(f"\n   Ganador: {ganador} (ventaja NLL: {diff:.8f})")
+#     print(f"   Pseudo R² GAM: {r2_gam:.4f} ({r2_gam*100:.2f}% de varianza explicada vs. modelo nulo)")
+#     print(f"   Pseudo R² GLM: {r2_glm:.4f} ({r2_glm*100:.2f}% de varianza explicada vs. modelo nulo)")
 
-    # ==========================================
-    # 8. HEATMAPS DE CV (para referencia)
-    # ==========================================
-    print("\nGenerando mapa de calor de NLL para GAM...")
-    plot_cv_heatmap(
-        error_matrix_gam, 
-        lambdas_a_probar, 
-        splines_a_probar, 
-        title='GAM CV NLL (Blue is Better)', 
-        xlabel='lambda (Smoothing)', 
-        ylabel='n_splines (Resolution)'
-    )
+#     # ==========================================
+#     # 8. HEATMAPS DE CV (para referencia)
+#     # ==========================================
+#     print("\nGenerando mapa de calor de NLL para GAM...")
+#     plot_cv_heatmap(
+#         error_matrix_gam, 
+#         lambdas_a_probar, 
+#         splines_a_probar, 
+#         title='GAM CV NLL (Blue is Better)', 
+#         xlabel='lambda (Smoothing)', 
+#         ylabel='n_splines (Resolution)'
+#     )
     
-    print("Generando mapa de calor de NLL para GLM...")
-    plot_cv_heatmap(
-        error_matrix_glm, 
-        alphas_a_probar, 
-        bines_a_probar, 
-        title='GLM CV NLL (Blue is Better)', 
-        xlabel='alpha (Regularization)', 
-        ylabel='n_bases (Resolution)'
-    )
+#     print("Generando mapa de calor de NLL para GLM...")
+#     plot_cv_heatmap(
+#         error_matrix_glm, 
+#         alphas_a_probar, 
+#         bines_a_probar, 
+#         title='GLM CV NLL (Blue is Better)', 
+#         xlabel='alpha (Regularization)', 
+#         ylabel='n_bases (Resolution)'
+#     )
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
