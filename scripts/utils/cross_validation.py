@@ -193,6 +193,9 @@ def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid):
                 if X_train.shape[1] == 3:
                     # Posición 2D + Viewpoint Circular (ambos regularizados por lam de la grilla)
                     formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=8, lam=lam, edge_knots=[0.0, 2*np.pi])
+                elif X_train.shape[1] == 1:
+                    # Viewpoint Circular Puro (sintonización direccional 1D)
+                    formula = s(0, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi])
                 else:
                     # Posición 2D pura
                     formula = te(0, 1, n_splines=n_splines, lam=lam)
@@ -278,6 +281,8 @@ def retrain_best_gam(X_train, Y_train, best_splines, best_lam):
     """Re-entrena el mejor GAM en todo el train_pool."""
     if X_train.shape[1] == 3:
         formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi])
+    elif X_train.shape[1] == 1:
+        formula = s(0, basis='cp', n_splines=best_splines, lam=best_lam, edge_knots=[0.0, 2*np.pi])
     else:
         formula = te(0, 1, n_splines=best_splines, lam=best_lam)
     modelo = PoissonGAM(formula).fit(X_train, Y_train)
