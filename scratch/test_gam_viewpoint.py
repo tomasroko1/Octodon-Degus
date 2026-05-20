@@ -18,6 +18,7 @@ from scripts.utils.cross_validation import (
     poisson_nll_per_sample,
     pseudo_r2_mcfadden
 )
+from pygam import PoissonGAM, s
 
 sesion = 2
 tetrodo = 2
@@ -97,7 +98,11 @@ print(f"GAM Posición + Viewpoint final entrenado.")
 gam_spatial_final = retrain_best_gam(X_pool[:, :2], Y_pool, best_sp, best_lam_gam)
 print(f"GAM Posición Puro final entrenado.")
 
-# 3. Re-entrenar GLM Posición (usando las primeras 2 columnas)
+# 3. Re-entrenar GAM Viewpoint Puro (usando solo la tercera columna, con spline circular s(0, basis='cp'))
+gam_viewpoint_final = PoissonGAM(s(0, basis='cp', n_splines=8, lam=best_lam_gam, edge_knots=[0.0, 2*np.pi])).fit(X_pool[:, 2:3], Y_pool)
+print(f"GAM Viewpoint Puro final entrenado.")
+
+# 4. Re-entrenar GLM Posición (usando las primeras 2 columnas)
 glm_final, cx, cy, sigma = retrain_best_glm(X_pool[:, :2], Y_pool, best_bines, best_alpha)
 print(f"GLM Posición final entrenado.")
 
@@ -113,19 +118,24 @@ mu_gam_spatial = gam_spatial_final.predict(X_held[:, :2])
 nll_gam_spatial = poisson_nll_per_sample(Y_held, mu_gam_spatial)
 r2_gam_spatial  = pseudo_r2_mcfadden(nll_gam_spatial, nll_nulo)
 
+mu_gam_viewpoint = gam_viewpoint_final.predict(X_held[:, 2:3])
+nll_gam_viewpoint = poisson_nll_per_sample(Y_held, mu_gam_viewpoint)
+r2_gam_viewpoint  = pseudo_r2_mcfadden(nll_gam_viewpoint, nll_nulo)
+
 mu_glm = predict_glm_on_new_data(glm_final, X_held[:, :2], cx, cy, sigma)
 nll_glm = poisson_nll_per_sample(Y_held, mu_glm)
 r2_glm  = pseudo_r2_mcfadden(nll_glm, nll_nulo)
 
-print(f"\n{'='*85}")
+print(f"\n{'='*102}")
 print(f"RESULTADOS FINALES EN HELD-OUT")
-print(f"{'='*85}")
-print(f"{'Métrica':<25} {'Modelo Nulo':>14} {'GAM Posición':>14} {'GAM Pos+View':>14} {'GLM Posición':>14}")
-print(f"{'-'*85}")
-print(f"{'NLL (held-out)':<25} {nll_nulo:>14.8f} {nll_gam_spatial:>14.8f} {nll_gam_joint:>14.8f} {nll_glm:>14.8f}")
-print(f"{'Pseudo R² (McFadden)':<25} {'---':>14} {r2_gam_spatial:>14.6f} {r2_gam_joint:>14.6f} {r2_glm:>14.6f}")
-print(f"{'-'*85}")
-print(f"Pseudo R² GAM Posición: {r2_gam_spatial:.4f} ({r2_gam_spatial*100:.2f}%)")
-print(f"Pseudo R² GAM Pos+View: {r2_gam_joint:.4f} ({r2_gam_joint*100:.2f}%)")
-print(f"Pseudo R² GLM Posición: {r2_glm:.4f} ({r2_glm*100:.2f}%)")
-print("="*85)
+print(f"{'='*102}")
+print(f"{'Métrica':<25} {'Modelo Nulo':>14} {'GAM Posición':>14} {'GAM Viewpoint':>14} {'GAM Pos+View':>14} {'GLM Posición':>14}")
+print(f"{'-'*102}")
+print(f"{'NLL (held-out)':<25} {nll_nulo:>14.8f} {nll_gam_spatial:>14.8f} {nll_gam_viewpoint:>14.8f} {nll_gam_joint:>14.8f} {nll_glm:>14.8f}")
+print(f"{'Pseudo R² (McFadden)':<25} {'---':>14} {r2_gam_spatial:>14.6f} {r2_gam_viewpoint:>14.6f} {r2_gam_joint:>14.6f} {r2_glm:>14.6f}")
+print(f"{'-'*102}")
+print(f"Pseudo R² GAM Posición:  {r2_gam_spatial:.4f} ({r2_gam_spatial*100:.2f}%)")
+print(f"Pseudo R² GAM Viewpoint: {r2_gam_viewpoint:.4f} ({r2_gam_viewpoint*100:.2f}%)")
+print(f"Pseudo R² GAM Pos+View:  {r2_gam_joint:.4f} ({r2_gam_joint*100:.2f}%)")
+print(f"Pseudo R² GLM Posición:  {r2_glm:.4f} ({r2_glm*100:.2f}%)")
+print("="*102)

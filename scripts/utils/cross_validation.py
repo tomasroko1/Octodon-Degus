@@ -1,6 +1,5 @@
 import sys
 import os
-# Agregar el directorio 'scripts' al path para poder importar de manera robusta
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
@@ -122,7 +121,7 @@ def generate_all_splits(n_muestras, bin_size_sec, block_size_sec=60, n_folds=5, 
             train_pool_idx.append(np.arange(inicio_pool, fin_pool))
     
     # ---------------------------------------------------------------
-    # 3. Empaquetar resultados.
+    # 3. Resultados.
     # ---------------------------------------------------------------
     held_out_final = np.concatenate(held_out_idx) if held_out_idx else np.array([], dtype=int)
     train_pool_final = np.concatenate(train_pool_idx) if train_pool_idx else np.array([], dtype=int)
@@ -192,8 +191,8 @@ def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid):
                 
                 # Definición del modelo según dimensionalidad de X
                 if X_train.shape[1] == 3:
-                    # Posición 2D + Viewpoint Circular
-                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=8, lam=0.5, edge_knots=[0.0, 2*np.pi])
+                    # Posición 2D + Viewpoint Circular (ambos regularizados por lam de la grilla)
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=8, lam=lam, edge_knots=[0.0, 2*np.pi])
                 else:
                     # Posición 2D pura
                     formula = te(0, 1, n_splines=n_splines, lam=lam)
@@ -278,7 +277,7 @@ def cross_validate_glm_grid(X, Y, folds, bines_grid, alphas_grid):
 def retrain_best_gam(X_train, Y_train, best_splines, best_lam):
     """Re-entrena el mejor GAM en todo el train_pool."""
     if X_train.shape[1] == 3:
-        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=0.5, edge_knots=[0.0, 2*np.pi])
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi])
     else:
         formula = te(0, 1, n_splines=best_splines, lam=best_lam)
     modelo = PoissonGAM(formula).fit(X_train, Y_train)
