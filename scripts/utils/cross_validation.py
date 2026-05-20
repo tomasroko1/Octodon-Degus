@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
 from scipy.special import gammaln
-from pygam import PoissonGAM, te
+from pygam import PoissonGAM, te, s
 from utils.data_loader import preparar_datos_posicion
 
 def generate_all_splits(n_muestras, bin_size_sec, block_size_sec=60, n_folds=5, buffer_sec=2):
@@ -176,7 +176,7 @@ def pseudo_r2_mcfadden(nll_modelo, nll_nulo):
 def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid):
     """
     Realiza la validación cruzada y extrae el Error de Test y el EDoF.
-    Devuelve la matriz de errores para el heatmap y la lista de resultados para el scatter plot.
+    Soporta modelo de posición puro (X con 2 columnas) y modelo de posición + viewpoint (X con 3 columnas).
     """
     resultados = []
     error_matrix = np.zeros((len(splines_grid), len(lambdas_grid)))
@@ -190,8 +190,16 @@ def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid):
                 X_train, Y_train = X[train_idx], Y[train_idx]
                 X_test, Y_test = X[test_idx], Y[test_idx]
                 
+                # Definición del modelo según dimensionalidad de X
+                if X_train.shape[1] == 3:
+                    # Posición 2D + Viewpoint Circular
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=8, lam=0.5, edge_knots=[0.0, 2*np.pi])
+                else:
+                    # Posición 2D pura
+                    formula = te(0, 1, n_splines=n_splines, lam=lam)
+                
                 # entrenar modelo
-                modelo = PoissonGAM(te(0, 1, n_splines=n_splines, lam=lam)).fit(X_train, Y_train)
+                modelo = PoissonGAM(formula).fit(X_train, Y_train)
                 
                 # calcular NLL en el fold de test usando loglikelihood de pygam
                 # el loglikelihood devuelve un número flotante, por lo que dividimos por len(Y_test) para el promedio
@@ -269,7 +277,11 @@ def cross_validate_glm_grid(X, Y, folds, bines_grid, alphas_grid):
 
 def retrain_best_gam(X_train, Y_train, best_splines, best_lam):
     """Re-entrena el mejor GAM en todo el train_pool."""
-    modelo = PoissonGAM(te(0, 1, n_splines=best_splines, lam=best_lam)).fit(X_train, Y_train)
+    if X_train.shape[1] == 3:
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=0.5, edge_knots=[0.0, 2*np.pi])
+    else:
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam)
+    modelo = PoissonGAM(formula).fit(X_train, Y_train)
     return modelo
 
 
