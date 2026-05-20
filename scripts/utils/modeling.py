@@ -3,8 +3,6 @@ métodos:
 - glm_position: implementa un glm manual desde cero usando campanas de gauss.
 - get_gam_posicion: entrena o carga un modelo gam (pygam) poisson para posición 2d.
 - graficar_gam_posicion: visualiza los resultados espaciales y temporales del gam de posición.
-- get_gam_viewpoint_1d: entrena o carga un modelo gam cíclico para la mirada en el perímetro 1d.
-- graficar_gam_viewpoint_1d: visualiza los resultados predichos del gam sobre las 4 paredes.
 """
 import os
 import pickle
@@ -16,6 +14,9 @@ try:
     from .data_loader import preparar_datos_posicion
 except ImportError:
     from data_loader import preparar_datos_posicion
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+MODELOS_DIR = os.path.join(BASE_DIR, 'models')
 
 def glm_position(sesion, tetrodo, neurona, n_bines=36, alpha=0.01):
     print("\n--- INICIANDO GLM ---")
@@ -77,7 +78,8 @@ def glm_position(sesion, tetrodo, neurona, n_bines=36, alpha=0.01):
     plt.show()
 
 def get_gam_posicion(sesion, tetrodo, neurona, splines, lam, bin_size_sec=0.1, force_retrain=False):
-    archivo_modelo = f'modelo_gam_pos_s{sesion}_t{tetrodo}_n{neurona}_sp{splines}.pkl'
+    os.makedirs(MODELOS_DIR, exist_ok=True)
+    archivo_modelo = os.path.join(MODELOS_DIR, f'modelo_gam_pos_s{sesion}_t{tetrodo}_n{neurona}_sp{splines}.pkl')
     X, Y = preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec)
     
     if os.path.exists(archivo_modelo) and not force_retrain:
