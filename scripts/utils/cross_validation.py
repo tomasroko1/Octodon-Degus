@@ -271,7 +271,7 @@ def cross_validate_glm_grid(X, Y, folds, bines_grid, alphas_grid):
             nll_medio = np.nanmean(errores_test_cv)
             error_matrix[b_idx, a_idx] = nll_medio
             
-            print(f"GLM | bines={n_bines:2d}x{n_bines:2d}, alpha={alpha:7.4f} | nll test: {nll_medio:.8f}")
+            print(f"GLM | bins={n_bines:2d}x{n_bines:2d}, alpha={alpha:7.4f} | nll test: {nll_medio:.8f}")
             resultados.append((n_bines, alpha, nll_medio))
             
     return error_matrix, resultados
