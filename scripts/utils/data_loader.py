@@ -10,7 +10,6 @@ import os
 import h5py
 import scipy.io as sio
 import numpy as np
-from scipy.ndimage import gaussian_filter1d
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
@@ -53,7 +52,7 @@ def _cargar_datos_neurona(sesion, tetrodo, neurona):
     
     return pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula
 
-def preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec):
+def preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec=0.1):
     pos_x, pos_y, pos_t, dt_video, vel, tiempos_celula = _cargar_datos_neurona(sesion, tetrodo, neurona)
     # pos_x, pos_y, vel = _suavizar_posicion_y_velocidad(pos_x, pos_y, pos_t, dt_video)
     
@@ -117,7 +116,7 @@ def preparar_datos_head_direction(sesion, tetrodo, neurona, bin_size_sec=0.1):
         
     return ang_bins_deg, conteo_spikes
 
-def preparar_datos_mirada(sesion, tetrodo, neurona, bin_size_sec=0.1, min_vel=2.0):
+def preparar_datos_mirada(sesion, tetrodo, neurona, bin_size_sec=0.1):
     """
     carga y prepara la trayectoria 2D del animal, su dirección de cabeza (HD) en radianes
     y los spikes correspondientes.
@@ -125,7 +124,6 @@ def preparar_datos_mirada(sesion, tetrodo, neurona, bin_size_sec=0.1, min_vel=2.
     args:
         sesion, tetrodo, neurona: identificadores de la neurona.
         bin_size_sec: tamaño del bin temporal.
-        min_vel: velocidad mínima para filtrar la actividad estática.
         
     returns:
         x_bins: array de la posición X del animal por bin.
@@ -154,13 +152,5 @@ def preparar_datos_mirada(sesion, tetrodo, neurona, bin_size_sec=0.1, min_vel=2.
     y_bins = np.interp(centros_bins, pos_t, pos_y)
     ang_bins = np.interp(centros_bins, pos_t, angulo)
     vel_bins = np.interp(centros_bins, pos_t, vel)
-    
-    # filtramos por velocidad mínima si se especifica
-    if min_vel > 0:
-        mascara_vel = vel_bins > min_vel
-        x_bins = x_bins[mascara_vel]
-        y_bins = y_bins[mascara_vel]
-        ang_bins = ang_bins[mascara_vel]
-        conteo_spikes = conteo_spikes[mascara_vel]
         
     return x_bins, y_bins, ang_bins, conteo_spikes
