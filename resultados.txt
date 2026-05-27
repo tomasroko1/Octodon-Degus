@@ -508,3 +508,92 @@ Pseudo R² (McFadden)                 ---       0.094317       0.090569
 
 Generando mapa de calor de NLL para GAM...
 Generando mapa de calor de NLL para GLM...
+
+
+
+
+
+--------------------
+--------------------
+--------------------
+--------------------
+
+--- Evaluando modelo: Pos ---
+sp= 9, lam= 0.1000000 | edof:  18.9048 | nll test: 0.19305042 (± 0.01111346)
+sp= 9, lam= 0.2154435 | edof:  15.6879 | nll test: 0.19222844 (± 0.01084653)
+sp= 9, lam= 0.4641589 | edof:  12.9401 | nll test: 0.19156054 (± 0.01063467)
+sp= 9, lam= 1.0000000 | edof:  10.6916 | nll test: 0.19157944 (± 0.01049314)
+sp= 9, lam= 2.1544347 | edof:   8.9030 | nll test: 0.19309679 (± 0.01040632)
+sp= 9, lam= 4.6415888 | edof:   7.4989 | nll test: 0.19700595 (± 0.01037520)
+sp= 9, lam=10.0000000 | edof:   6.4123 | nll test: 0.20372938 (± 0.01049221)
+Mejor configuración (Min NLL): splines=9, lambda=0.4642
+
+--- Evaluando modelo: Viewpoint ---
+sp= 9, lam= 0.1000000 | edof:   8.1313 | nll test: 0.27069457 (± 0.01985588)
+sp= 9, lam= 0.2154435 | edof:   7.6655 | nll test: 0.27041406 (± 0.01974296)
+sp= 9, lam= 0.4641589 | edof:   7.1697 | nll test: 0.27003683 (± 0.01959299)
+sp= 9, lam= 1.0000000 | edof:   6.6916 | nll test: 0.26958794 (± 0.01941987)
+sp= 9, lam= 2.1544347 | edof:   6.2408 | nll test: 0.26914099 (± 0.01925491)
+sp= 9, lam= 4.6415888 | edof:   5.8112 | nll test: 0.26876645 (± 0.01911945)
+sp= 9, lam=10.0000000 | edof:   5.3966 | nll test: 0.26852984 (± 0.01901333)
+Mejor configuración (Min NLL): splines=9, lambda=10.0000
+
+--- Evaluando modelo: HD ---
+sp= 9, lam= 0.1000000 | edof:   8.2597 | nll test: 0.27610153 (± 0.02025040)
+sp= 9, lam= 0.2154435 | edof:   7.8231 | nll test: 0.27594310 (± 0.02018638)
+sp= 9, lam= 0.4641589 | edof:   7.3337 | nll test: 0.27577262 (± 0.02011873)
+sp= 9, lam= 1.0000000 | edof:   6.8491 | nll test: 0.27560496 (± 0.02005295)
+sp= 9, lam= 2.1544347 | edof:   6.3898 | nll test: 0.27544296 (± 0.01998532)
+sp= 9, lam= 4.6415888 | edof:   5.9541 | nll test: 0.27528032 (± 0.01989832)
+sp= 9, lam=10.0000000 | edof:   5.5329 | nll test: 0.27511561 (± 0.01975948)
+Mejor configuración (Min NLL): splines=9, lambda=10.0000
+
+--- Evaluando modelo: Pos + View ---
+sp= 9, lam= 0.1000000 | edof:  26.0319 | nll test: 0.18769154 (± 0.01192299)
+sp= 9, lam= 0.2154435 | edof:  22.3640 | nll test: 0.18691487 (± 0.01157821)
+sp= 9, lam= 0.4641589 | edof:  19.1331 | nll test: 0.18631941 (± 0.01128537)
+sp= 9, lam= 1.0000000 | edof:  16.4136 | nll test: 0.18638873 (± 0.01106017)
+sp= 9, lam= 2.1544347 | edof:  14.1751 | nll test: 0.18792837 (± 0.01088187)
+sp= 9, lam= 4.6415888 | edof:  12.3372 | nll test: 0.19188358 (± 0.01075507)
+sp= 9, lam=10.0000000 | edof:  10.8321 | nll test: 0.19881062 (± 0.01080028)
+Mejor configuración (Min NLL): splines=9, lambda=0.4642
+
+--- Evaluando modelo: Pos + HD ---
+sp= 9, lam= 0.1000000 | edof:  26.0666 | nll test: 0.19133097 (± 0.01201991)
+sp= 9, lam= 0.2154435 | edof:  22.4256 | nll test: 0.19050051 (± 0.01176780)
+sp= 9, lam= 0.4641589 | edof:  19.2051 | nll test: 0.18979960 (± 0.01164606)
+sp= 9, lam= 1.0000000 | edof:  16.4875 | nll test: 0.18973008 (± 0.01169483)
+sp= 9, lam= 2.1544347 | edof:  14.2517 | nll test: 0.19109299 (± 0.01188376)
+sp= 9, lam= 4.6415888 | edof:  12.4181 | nll test: 0.19483957 (± 0.01213306)
+sp= 9, lam=10.0000000 | edof:  10.9118 | nll test: 0.20151745 (± 0.01238599)
+Mejor configuración (Min NLL): splines=9, lambda=1.0000
+
+--- Evaluando modelo: Pos + Dist ---
+sp= 9, lam= 0.1000000 | edof:  20.9508 | nll test: 0.19283268 (± 0.01067348)
+sp= 9, lam= 0.2154435 | edof:  17.5521 | nll test: 0.19250898 (± 0.01053633)
+sp= 9, lam= 0.4641589 | edof:  14.5715 | nll test: 0.19221226 (± 0.01041779)
+sp= 9, lam= 1.0000000 | edof:  12.1005 | nll test: 0.19216088 (± 0.01037898)
+sp= 9, lam= 2.1544347 | edof:  10.1512 | nll test: 0.19256053 (± 0.01051291)
+sp= 9, lam= 4.6415888 | edof:   8.6327 | nll test: 0.19378594 (± 0.01090172)
+sp= 9, lam=10.0000000 | edof:   7.4276 | nll test: 0.19633446 (± 0.01156345)
+Mejor configuración (Min NLL): splines=9, lambda=1.0000
+
+--- Evaluando modelo: Pos + View + Dist ---
+sp= 9, lam= 0.1000000 | edof:  28.0715 | nll test: 0.18740439 (± 0.01170719)
+sp= 9, lam= 0.2154435 | edof:  24.2204 | nll test: 0.18704383 (± 0.01146832)
+sp= 9, lam= 0.4641589 | edof:  20.7476 | nll test: 0.18671638 (± 0.01123434)
+sp= 9, lam= 1.0000000 | edof:  17.7935 | nll test: 0.18659433 (± 0.01105732)
+sp= 9, lam= 2.1544347 | edof:  15.3870 | nll test: 0.18686714 (± 0.01103651)
+sp= 9, lam= 4.6415888 | edof:  13.4346 | nll test: 0.18790475 (± 0.01125402)
+sp= 9, lam=10.0000000 | edof:  11.8155 | nll test: 0.19022618 (± 0.01170751)
+Mejor configuración (Min NLL): splines=9, lambda=1.0000
+
+--- Evaluando modelo: Pos + HD + Dist ---
+sp= 9, lam= 0.1000000 | edof:  28.1100 | nll test: 0.19090539 (± 0.01150459)
+sp= 9, lam= 0.2154435 | edof:  24.2854 | nll test: 0.19060611 (± 0.01132053)
+sp= 9, lam= 0.4641589 | edof:  20.8359 | nll test: 0.19029115 (± 0.01119560)
+sp= 9, lam= 1.0000000 | edof:  17.9031 | nll test: 0.19018322 (± 0.01118987)
+sp= 9, lam= 2.1544347 | edof:  15.5118 | nll test: 0.19054523 (± 0.01138750)
+sp= 9, lam= 4.6415888 | edof:  13.5686 | nll test: 0.19183694 (± 0.01185841)
+sp= 9, lam=10.0000000 | edof:  11.9449 | nll test: 0.19461782 (± 0.01258635)
+Mejor configuración (Min NLL): splines=9, lambda=1.0000

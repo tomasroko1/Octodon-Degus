@@ -10,6 +10,7 @@ data/
 models/
 scripts/glm_analysis.py
 scripts/play_cv.py
+scripts/batch_analysis.py
 !README.md
 *.m
 *.pkl
@@ -19,4 +20,5 @@ scripts/play_cv.py
 *.md
 *.py[cod]
 *$py.class
-
+figures/
+results/
