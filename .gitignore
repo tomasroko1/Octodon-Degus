@@ -20,5 +20,4 @@ scripts/batch_analysis.py
 *.md
 *.py[cod]
 *$py.class
-figures/
 results/
