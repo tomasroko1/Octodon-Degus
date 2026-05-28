@@ -1,1 +1,1 @@
-Análisis de células hipocampales en *Octodon degus*. Todo el código se corre y prueba desde el notebook `playground.ipynb`.
+Análisis de células hipocampales en *Octodon degus*. Ver 2.2.3.ipynb

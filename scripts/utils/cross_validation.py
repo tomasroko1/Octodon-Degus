@@ -172,7 +172,7 @@ def pseudo_r2_mcfadden(nll_modelo, nll_nulo):
     return 1.0 - (nll_modelo / nll_nulo)
 
 
-def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid):
+def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid, model_type="pos_view_angle"):
     """
     Realiza la validación cruzada y extrae el Error de Test y el EDoF.
     Soporta modelo de posición puro (X con 2 columnas) y modelo de posición + viewpoint (X con 3 columnas).
@@ -189,16 +189,60 @@ def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid):
                 X_train, Y_train = X[train_idx], Y[train_idx]
                 X_test, Y_test = X[test_idx], Y[test_idx]
                 
-                # Definición del modelo según dimensionalidad de X
-                if X_train.shape[1] == 3:
-                    # Posición 2D + Viewpoint Circular (ambos regularizados por lam de la grilla)
-                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=8, lam=lam, edge_knots=[0.0, 2*np.pi])
-                elif X_train.shape[1] == 1:
-                    # Viewpoint Circular Puro (sintonización direccional 1D)
-                    formula = s(0, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi])
-                else:
-                    # Posición 2D pura
+                # Definición del modelo según el tipo de modelo
+                if model_type == "pos":
+                    # Posición 2D pura (columnas 0, 1)
                     formula = te(0, 1, n_splines=n_splines, lam=lam)
+                elif model_type == "view_angle":
+                    # Viewpoint Circular Puro (columna 0)
+                    formula = s(0, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi])
+                elif model_type == "view_angle_dist":
+                    # Viewpoint Circular + Distancia (columnas 0: ángulo, 1: distancia)
+                    formula = s(0, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(1, n_splines=n_splines, lam=lam)
+                elif model_type == "pos_view_angle":
+                    # Posición 2D + Viewpoint Circular (columnas 0, 1: pos, 2: ángulo)
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi])
+                elif model_type == "pos_view_angle_dist":
+                    # Posición 2D + Viewpoint Circular + Distancia (cols 0, 1: pos, 2: ángulo, 3: distancia)
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(3, n_splines=n_splines, lam=lam)
+                elif model_type == "pos_hd":
+                    # Posición 2D + Head Direction (cols 0, 1: pos, 2: hd_rad)
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi])
+                elif model_type == "pos_dist":
+                    # Posición 2D + Distancia (cols 0, 1: pos, 2: distancia)
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, n_splines=n_splines, lam=lam)
+                elif model_type == "pos_hd_dist":
+                    # Posición 2D + HD + Distancia (cols 0, 1: pos, 2: hd, 3: distancia)
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(3, n_splines=n_splines, lam=lam)
+                elif model_type == "dist":
+                    formula = s(0, n_splines=n_splines, lam=lam)
+                elif model_type == "view_hd":
+                    formula = s(0, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(1, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi])
+                elif model_type == "pos_view_hd":
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(3, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi])
+                elif model_type == "view_hd_dist":
+                    formula = s(0, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(1, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(2, n_splines=n_splines, lam=lam)
+                elif model_type == "pos_view_hd_dist":
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(3, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(4, n_splines=n_splines, lam=lam)
+                elif model_type.startswith("shapley_"):
+                    components = model_type.split("_")[1:]
+                    terms = []
+                    if "pos" in components:
+                        terms.append(te(0, 1, n_splines=n_splines, lam=lam))
+                    if "hd" in components:
+                        terms.append(s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]))
+                    if "view" in components:
+                        terms.append(s(3, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]))
+                    if "dist" in components:
+                        terms.append(s(4, n_splines=n_splines, lam=lam))
+                    
+                    if not terms:
+                        raise ValueError(f"model_type '{model_type}' no contiene componentes válidos")
+                    formula = terms[0]
+                    for t in terms[1:]:
+                        formula += t
+                else:
+                    raise ValueError(f"model_type '{model_type}' no soportado")
                 
                 # entrenar modelo
                 modelo = PoissonGAM(formula).fit(X_train, Y_train)
@@ -210,12 +254,14 @@ def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid):
                 edofs_cv.append(modelo.statistics_['edof'])
                 
             nll_medio = np.mean(errores_test_cv)
+            nll_std = np.std(errores_test_cv)
+            nll_sem = nll_std / np.sqrt(len(errores_test_cv))
             edof_medio = np.mean(edofs_cv)
             
             error_matrix[s_idx, l_idx] = nll_medio
             
-            print(f"sp={n_splines:2d}, lam={lam:10.7f} | edof: {edof_medio:8.4f} | nll test: {nll_medio:.8f}")
-            resultados.append((n_splines, lam, edof_medio, nll_medio))
+            print(f"sp={n_splines:2d}, lam={lam:10.7f} | edof: {edof_medio:8.4f} | nll test: {nll_medio:.8f} (± {nll_sem:.8f})")
+            resultados.append((n_splines, lam, edof_medio, nll_medio, nll_sem, nll_std))
                 
     return error_matrix, resultados
 
@@ -269,22 +315,261 @@ def cross_validate_glm_grid(X, Y, folds, bines_grid, alphas_grid):
                     errores_test_cv.append(np.nan)
                     
             nll_medio = np.nanmean(errores_test_cv)
+            nll_std = np.nanstd(errores_test_cv)
+            nll_sem = nll_std / np.sqrt(np.sum(~np.isnan(errores_test_cv))) if np.sum(~np.isnan(errores_test_cv)) > 0 else np.nan
             error_matrix[b_idx, a_idx] = nll_medio
             
-            print(f"GLM | bins={n_bines:2d}x{n_bines:2d}, alpha={alpha:7.4f} | nll test: {nll_medio:.8f}")
-            resultados.append((n_bines, alpha, nll_medio))
+            print(f"GLM | bins={n_bines:2d}x{n_bines:2d}, alpha={alpha:7.4f} | nll test: {nll_medio:.8f} (± {nll_sem:.8f})")
+            resultados.append((n_bines, alpha, nll_medio, nll_sem, nll_std))
             
     return error_matrix, resultados
 
+def select_best_1se_gam(resultados):
+    """
+    Selecciona el mejor modelo GAM usando la regla de un error estándar (1SE Rule).
+    1. Encuentra el modelo con el mínimo NLL promedio.
+    2. Calcula el umbral = NLL_min + SEM_NLL_min.
+    3. Filtra todos los modelos cuyo NLL promedio es menor o igual al umbral.
+    4. De este subconjunto, elige el modelo con menor complejidad (menor EDoF medio).
+    """
+    # Resultados tiene: (n_splines, lam, edof_medio, nll_medio, nll_sem, nll_std)
+    resultados_ordenados = sorted(resultados, key=lambda x: x[3])
+    mejor_min = resultados_ordenados[0]
+    nll_min = mejor_min[3]
+    sem_min = mejor_min[4]
+    
+    umbral = nll_min + sem_min
+    
+    # Filtrar candidatos
+    candidatos = [r for r in resultados if r[3] <= umbral]
+    
+    # Seleccionar con menor EDoF (índice 2)
+    mejor_1se = sorted(candidatos, key=lambda x: x[2])[0]
+    
+    return mejor_min, mejor_1se, umbral
 
-def retrain_best_gam(X_train, Y_train, best_splines, best_lam):
+def select_best_1se_glm(resultados):
+    """
+    Selecciona el mejor modelo GLM usando la regla de un error estándar (1SE Rule).
+    1. Encuentra el modelo con el mínimo NLL promedio.
+    2. Calcula el umbral = NLL_min + SEM_NLL_min.
+    3. Filtra todos los modelos cuyo NLL promedio es menor o igual al umbral.
+    4. De este subconjunto, elige el modelo con menor complejidad (menor número de bines, y mayor alpha).
+    """
+    # Resultados tiene: (n_bines, alpha, nll_medio, nll_sem, nll_std)
+    resultados_ordenados = sorted(resultados, key=lambda x: x[2])
+    mejor_min = resultados_ordenados[0]
+    nll_min = mejor_min[2]
+    sem_min = mejor_min[3]
+    
+    umbral = nll_min + sem_min
+    
+    # Filtrar candidatos
+    candidatos = [r for r in resultados if r[2] <= umbral]
+    
+    # Seleccionar con menor n_bines (índice 0), y en caso de empate, mayor alpha (índice 1)
+    mejor_1se = sorted(candidatos, key=lambda x: (x[0], -x[1]))[0]
+    
+    return mejor_min, mejor_1se, umbral
+
+def plot_cv_errorbars_gam(resultados, title="GAM: EDoF vs NLL con Error Estándar (1-SE Rule)"):
+    """
+    Grafica el Test Error en función de los Grados de Libertad Efectivos (EDoF)
+    mostrando barras de error (SEM) para cada configuración de hiperparámetros,
+    y resalta el modelo óptimo según la regla 1-SE.
+    """
+    splines = np.array([r[0] for r in resultados])
+    lambdas = np.array([r[1] for r in resultados])
+    edofs = np.array([r[2] for r in resultados])
+    errores = np.array([r[3] for r in resultados])
+    sems = np.array([r[4] for r in resultados])
+    
+    mejor_min, mejor_1se, umbral = select_best_1se_gam(resultados)
+    
+    plt.figure(figsize=(11, 7))
+    
+    unique_splines = sorted(list(set(splines)))
+    colores = plt.cm.plasma(np.linspace(0.1, 0.9, len(unique_splines)))
+    
+    for sp, color in zip(unique_splines, colores):
+        idx = [i for i, s in enumerate(splines) if s == sp]
+        edof_sp = edofs[idx]
+        err_sp = errores[idx]
+        sem_sp = sems[idx]
+        
+        # Ordenar por edof para conectar las líneas correctamente
+        sort_idx = np.argsort(edof_sp)
+        
+        # Graficar puntos con barras de error
+        plt.errorbar(
+            edof_sp[sort_idx], 
+            err_sp[sort_idx], 
+            yerr=sem_sp[sort_idx],
+            fmt='o',
+            color=color,
+            ecolor='gray',
+            elinewidth=1.5,
+            capsize=3,
+            markersize=7,
+            label=f'{sp} splines',
+            zorder=3,
+            alpha=0.85
+        )
+        
+        # Conectar con línea fina
+        plt.plot(
+            edof_sp[sort_idx],
+            err_sp[sort_idx],
+            color=color,
+            linestyle='-',
+            linewidth=1.5,
+            alpha=0.4,
+            zorder=2
+        )
+        
+    # Líneas de umbral
+    plt.axhline(y=mejor_min[3], color='red', linestyle='--', alpha=0.6, 
+                label=f'Min NLL ({mejor_min[3]:.5f})')
+    plt.axhline(y=umbral, color='forestgreen', linestyle=':', alpha=0.7, 
+                linewidth=2, label=f'1-SE Threshold ({umbral:.5f})')
+    
+    # Destacar mejor absoluto
+    plt.scatter([mejor_min[2]], [mejor_min[3]], color='red', marker='*', 
+                s=350, edgecolor='black', zorder=5, label='Best Min NLL')
+    
+    # Destacar mejor 1SE
+    plt.scatter([mejor_1se[2]], [mejor_1se[3]], color='forestgreen', marker='D', 
+                s=200, edgecolor='black', zorder=5, label=f'1-SE Rule Pick (sp={mejor_1se[0]}, lam={mejor_1se[1]:.4g})')
+    
+    plt.title(title, fontsize=14, fontweight='bold', pad=15)
+    plt.xlabel('Effective Degrees of Freedom (EDoF)', fontsize=12)
+    plt.ylabel('Mean Test NLL (± SEM)', fontsize=12)
+    plt.grid(True, linestyle=':', alpha=0.5)
+    plt.legend(loc='best', frameon=True, facecolor='white', framealpha=0.9)
+    plt.tight_layout()
+    plt.show()
+
+def plot_cv_errorbars_glm(resultados, title="GLM: Bins vs NLL with Standard Error (1-SE Rule)"):
+    """
+    Grafica el Test Error para el GLM mostrando barras de error (SEM)
+    y resalta el modelo óptimo según la regla 1-SE.
+    """
+    bines = np.array([r[0] for r in resultados])
+    alphas = np.array([r[1] for r in resultados])
+    errores = np.array([r[2] for r in resultados])
+    sems = np.array([r[3] for r in resultados])
+    
+    mejor_min, mejor_1se, umbral = select_best_1se_glm(resultados)
+    
+    plt.figure(figsize=(11, 7))
+    
+    unique_bines = sorted(list(set(bines)))
+    colores = plt.cm.viridis(np.linspace(0.2, 0.8, len(unique_bines)))
+    
+    for bn, color in zip(unique_bines, colores):
+        idx = [i for i, b in enumerate(bines) if b == bn]
+        alpha_bn = alphas[idx]
+        err_bn = errores[idx]
+        sem_bn = sems[idx]
+        
+        # Ordenar por alpha
+        sort_idx = np.argsort(alpha_bn)
+        
+        plt.errorbar(
+            alpha_bn[sort_idx], 
+            err_bn[sort_idx], 
+            yerr=sem_bn[sort_idx],
+            fmt='o',
+            color=color,
+            ecolor='gray',
+            elinewidth=1.5,
+            capsize=3,
+            markersize=7,
+            label=f'{bn}x{bn} bases',
+            zorder=3,
+            alpha=0.85
+        )
+        
+        plt.plot(
+            alpha_bn[sort_idx],
+            err_bn[sort_idx],
+            color=color,
+            linestyle='-',
+            linewidth=1.5,
+            alpha=0.4,
+            zorder=2
+        )
+        
+    plt.axhline(y=mejor_min[2], color='red', linestyle='--', alpha=0.6, 
+                label=f'Min NLL ({mejor_min[2]:.5f})')
+    plt.axhline(y=umbral, color='forestgreen', linestyle=':', alpha=0.7, 
+                linewidth=2, label=f'1-SE Threshold ({umbral:.5f})')
+    
+    # Destacar mejor absoluto
+    plt.scatter([mejor_min[1]], [mejor_min[2]], color='red', marker='*', 
+                s=350, edgecolor='black', zorder=5, label='Best Min NLL')
+    
+    # Destacar mejor 1SE
+    plt.scatter([mejor_1se[1]], [mejor_1se[2]], color='forestgreen', marker='D', 
+                s=200, edgecolor='black', zorder=5, label=f'1-SE Rule Pick (bins={mejor_1se[0]}, alpha={mejor_1se[1]:.4g})')
+    
+    plt.xscale('log')
+    plt.title(title, fontsize=14, fontweight='bold', pad=15)
+    plt.xlabel('Alpha (Regularization - Log Scale)', fontsize=12)
+    plt.ylabel('Mean Test NLL (± SEM)', fontsize=12)
+    plt.grid(True, which="both", linestyle=':', alpha=0.5)
+    plt.legend(loc='best', frameon=True, facecolor='white', framealpha=0.9)
+    plt.tight_layout()
+    plt.show()
+
+
+def retrain_best_gam(X_train, Y_train, best_splines, best_lam, model_type="pos_view_angle"):
     """Re-entrena el mejor GAM en todo el train_pool."""
-    if X_train.shape[1] == 3:
-        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi])
-    elif X_train.shape[1] == 1:
-        formula = s(0, basis='cp', n_splines=best_splines, lam=best_lam, edge_knots=[0.0, 2*np.pi])
-    else:
+    if model_type == "pos":
         formula = te(0, 1, n_splines=best_splines, lam=best_lam)
+    elif model_type == "view_angle":
+        formula = s(0, basis='cp', n_splines=best_splines, lam=best_lam, edge_knots=[0.0, 2*np.pi])
+    elif model_type == "view_angle_dist":
+        formula = s(0, basis='cp', n_splines=best_splines, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(1, n_splines=best_splines, lam=best_lam)
+    elif model_type == "pos_view_angle":
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi])
+    elif model_type == "pos_view_angle_dist":
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(3, n_splines=best_splines, lam=best_lam)
+    elif model_type == "pos_hd":
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi])
+    elif model_type == "pos_dist":
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, n_splines=best_splines, lam=best_lam)
+    elif model_type == "pos_hd_dist":
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(3, n_splines=best_splines, lam=best_lam)
+    elif model_type == "dist":
+        formula = s(0, n_splines=best_splines, lam=best_lam)
+    elif model_type == "view_hd":
+        formula = s(0, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(1, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi])
+    elif model_type == "pos_view_hd":
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(3, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi])
+    elif model_type == "view_hd_dist":
+        formula = s(0, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(1, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(2, n_splines=best_splines, lam=best_lam)
+    elif model_type == "pos_view_hd_dist":
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(3, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(4, n_splines=best_splines, lam=best_lam)
+    elif model_type.startswith("shapley_"):
+        components = model_type.split("_")[1:]
+        terms = []
+        if "pos" in components:
+            terms.append(te(0, 1, n_splines=best_splines, lam=best_lam))
+        if "hd" in components:
+            terms.append(s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]))
+        if "view" in components:
+            terms.append(s(3, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]))
+        if "dist" in components:
+            terms.append(s(4, n_splines=best_splines, lam=best_lam))
+        
+        if not terms:
+            raise ValueError(f"model_type '{model_type}' no contiene componentes válidos")
+        formula = terms[0]
+        for t in terms[1:]:
+            formula += t
+    else:
+        raise ValueError(f"model_type '{model_type}' no soportado")
     modelo = PoissonGAM(formula).fit(X_train, Y_train)
     return modelo
 
