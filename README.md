@@ -1,1 +1,5 @@
-Análisis de células hipocampales en *Octodon degus*. Ver 2.2.3.ipynb vs 2.2.5.ipynb final.
+Análisis de células hipocampales en *Octodon degus*. Ver resultados de las celulas 2.2.1, 2.2.3 y 2.2.5 a continuacion: 
+
+![2.2.1 shapley](figures/shapley2.2.1.png)
+![2.2.3 shapley](figures/shapley2.2.3.png)
+![2.2.5 shapley](figures/shapley2.2.5.png)
