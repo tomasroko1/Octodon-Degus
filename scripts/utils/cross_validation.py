@@ -214,6 +214,16 @@ def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid, model_type=
                 elif model_type == "pos_hd_dist":
                     # Posición 2D + HD + Distancia (cols 0, 1: pos, 2: hd, 3: distancia)
                     formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(3, n_splines=n_splines, lam=lam)
+                elif model_type == "dist":
+                    formula = s(0, n_splines=n_splines, lam=lam)
+                elif model_type == "view_hd":
+                    formula = s(0, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(1, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi])
+                elif model_type == "pos_view_hd":
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(3, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi])
+                elif model_type == "view_hd_dist":
+                    formula = s(0, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(1, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(2, n_splines=n_splines, lam=lam)
+                elif model_type == "pos_view_hd_dist":
+                    formula = te(0, 1, n_splines=n_splines, lam=lam) + s(2, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(3, basis='cp', n_splines=n_splines, lam=lam, edge_knots=[0.0, 2*np.pi]) + s(4, n_splines=n_splines, lam=lam)
                 elif model_type.startswith("shapley_"):
                     components = model_type.split("_")[1:]
                     terms = []
@@ -432,14 +442,14 @@ def plot_cv_errorbars_gam(resultados, title="GAM: EDoF vs NLL con Error Estánda
                 s=200, edgecolor='black', zorder=5, label=f'1-SE Rule Pick (sp={mejor_1se[0]}, lam={mejor_1se[1]:.4g})')
     
     plt.title(title, fontsize=14, fontweight='bold', pad=15)
-    plt.xlabel('Grados de Libertad Efectivos (EDoF)', fontsize=12)
-    plt.ylabel('NLL de Test Promedio (± SEM)', fontsize=12)
+    plt.xlabel('Effective Degrees of Freedom (EDoF)', fontsize=12)
+    plt.ylabel('Mean Test NLL (± SEM)', fontsize=12)
     plt.grid(True, linestyle=':', alpha=0.5)
     plt.legend(loc='best', frameon=True, facecolor='white', framealpha=0.9)
     plt.tight_layout()
     plt.show()
 
-def plot_cv_errorbars_glm(resultados, title="GLM: Bines vs NLL con Error Estándar (1-SE Rule)"):
+def plot_cv_errorbars_glm(resultados, title="GLM: Bins vs NLL with Standard Error (1-SE Rule)"):
     """
     Grafica el Test Error para el GLM mostrando barras de error (SEM)
     y resalta el modelo óptimo según la regla 1-SE.
@@ -505,8 +515,8 @@ def plot_cv_errorbars_glm(resultados, title="GLM: Bines vs NLL con Error Estánd
     
     plt.xscale('log')
     plt.title(title, fontsize=14, fontweight='bold', pad=15)
-    plt.xlabel('Alpha (Regularización - Escala Log)', fontsize=12)
-    plt.ylabel('NLL de Test Promedio (± SEM)', fontsize=12)
+    plt.xlabel('Alpha (Regularization - Log Scale)', fontsize=12)
+    plt.ylabel('Mean Test NLL (± SEM)', fontsize=12)
     plt.grid(True, which="both", linestyle=':', alpha=0.5)
     plt.legend(loc='best', frameon=True, facecolor='white', framealpha=0.9)
     plt.tight_layout()
@@ -531,6 +541,16 @@ def retrain_best_gam(X_train, Y_train, best_splines, best_lam, model_type="pos_v
         formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, n_splines=best_splines, lam=best_lam)
     elif model_type == "pos_hd_dist":
         formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(3, n_splines=best_splines, lam=best_lam)
+    elif model_type == "dist":
+        formula = s(0, n_splines=best_splines, lam=best_lam)
+    elif model_type == "view_hd":
+        formula = s(0, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(1, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi])
+    elif model_type == "pos_view_hd":
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(3, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi])
+    elif model_type == "view_hd_dist":
+        formula = s(0, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(1, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(2, n_splines=best_splines, lam=best_lam)
+    elif model_type == "pos_view_hd_dist":
+        formula = te(0, 1, n_splines=best_splines, lam=best_lam) + s(2, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(3, basis='cp', n_splines=8, lam=best_lam, edge_knots=[0.0, 2*np.pi]) + s(4, n_splines=best_splines, lam=best_lam)
     elif model_type.startswith("shapley_"):
         components = model_type.split("_")[1:]
         terms = []

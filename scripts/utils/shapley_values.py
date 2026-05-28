@@ -128,7 +128,7 @@ def plot_shapley_values(phi, total_r2=None):
     bars = ax.barh(labels, percentages, color=colors)
     
     ax.set_xlabel('Shapley Value (%)', fontsize=12)
-    ax.set_title('Contribución Relativa de las Variables de Comportamiento', fontsize=14, fontweight='bold')
+    ax.set_title('Relative Contribution of Behavioral Variables', fontsize=14, fontweight='bold')
     
     ax.set_xlim(0, max(percentages) * 1.2 if max(percentages) > 0 else 100)
     ax.spines['top'].set_visible(False)
@@ -143,10 +143,10 @@ def plot_shapley_values(phi, total_r2=None):
                     ha='left', va='center', fontsize=11)
                     
     if total_r2 is not None:
-        text_str = f'R² Modelo Completo = {total_r2:.4f}\\n(Eficiencia: Suma Shapley = {total_phi:.4f})'
-        ax.text(0.95, 0.05, text_str,
+        text_str = f'R² Full Model = {total_r2:.4f}\n(Efficiency: Shapley Sum = {total_phi:.4f})'
+        ax.text(0.95, 0.95, text_str,
                 horizontalalignment='right',
-                verticalalignment='bottom',
+                verticalalignment='top',
                 transform=ax.transAxes,
                 bbox=dict(facecolor='white', alpha=0.9, edgecolor='lightgray', boxstyle='round,pad=0.5'))
                 
