@@ -6,6 +6,9 @@
 % (viewpoint tuning) con test de significancia por spike shifting.
 % =========================================================================
 
+% Agregar el directorio de funciones auxiliares al path de MATLAB
+addpath(fullfile('..', 'reference', 'matlab'));
+
 fpath = '/mnt/NAS/Degus/merged_files/';
 load('/mnt/NAS/Mati/MATLAB/2019-20 _ Degus/Degus-2020-Mati/AllData2.db', '-mat');
 close all;

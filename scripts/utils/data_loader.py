@@ -45,6 +45,10 @@ def _cargar_datos_neurona(sesion, tetrodo, neurona, db_merged_path, db_clnew_pat
     nombre_pos = f'pos_{sesion}'
     pos_x = np.array(file[nombre_pos]['x']).flatten()
     pos_y = np.array(file[nombre_pos]['y']).flatten()
+    
+    # Zero-center coordinates to match MATLAB space
+    pos_x = pos_x - np.nanmin(pos_x)
+    pos_y = pos_y - np.nanmin(pos_y)
     pos_t = np.array(file[nombre_pos]['t']).flatten()
 
     dt_video = np.mean(np.diff(pos_t))  # segundos por frame ~0.02
