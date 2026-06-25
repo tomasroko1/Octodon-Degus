@@ -209,7 +209,10 @@ def find_optimal_lambda_dynamic(X, Y, folds, n_splines, model_type="pos", lam_st
         if pasos_sin_mejora >= patience:
             break
             
-        lam_actual *= factor
+        if isinstance(lam_actual, (list, tuple)):
+            lam_actual = [lam * factor for lam in lam_actual]
+        else:
+            lam_actual *= factor
         
     return mejor_lam, mejor_edof, mejor_nll, resultados_busqueda
 
