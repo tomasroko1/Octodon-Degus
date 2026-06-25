@@ -1,7 +1,10 @@
 import numpy as np
 import math
 import itertools
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 from .cross_validation import (
     cross_validate_gam_grid, 
     retrain_best_gam, 

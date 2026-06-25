@@ -4,7 +4,10 @@ métodos:
 - rate_map: genera un mapa de calor suavizado espacialmente (hz) enmascarando zonas no visitadas.
 """
 import numpy as np
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 from scipy.ndimage import gaussian_filter
 
 

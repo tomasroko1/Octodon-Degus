@@ -7,8 +7,14 @@ métodos:
 import os
 import pickle
 import numpy as np
-import matplotlib.pyplot as plt
-import statsmodels.api as sm
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
+try:
+    import statsmodels.api as sm
+except ImportError:
+    sm = None
 from pygam import PoissonGAM, te, s
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
