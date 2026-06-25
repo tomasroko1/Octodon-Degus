@@ -21,6 +21,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from utils.data_loader import load_cell_data
+from convert_mat_to_csv import convert_mat_to_csv
 from utils.cross_validation import (
     generate_all_splits,
     find_optimal_lambda_dynamic,
@@ -158,10 +159,17 @@ def process_cell(cell_id, best_x, best_y, current_idx, total_cells, data_dir=Non
 
 def run_step2(data_dir=None):
     step1_csv = os.path.join(RESULTS_DIR, 'viewpoint_results.csv')
+    step1_mat = os.path.join(RESULTS_DIR, 'viewpoint_results.mat')
+    
     if not os.path.exists(step1_csv):
-        print(f"Error: No se encontró el output del Step 1 en {step1_csv}")
-        print("Debes correr 'python step1_viewpoint_analysis.py' primero.")
-        return
+        if os.path.exists(step1_mat):
+            print("Detectado output de MATLAB. Convirtiendo a CSV automáticamente...")
+            if not convert_mat_to_csv(step1_mat, step1_csv):
+                return
+        else:
+            print(f"Error: No se encontró el output del Step 1 en {step1_mat} ni {step1_csv}")
+            print("Debes correr 'step1_viewpoint_analysis.m' en MATLAB primero.")
+            return
         
     df_sig = []
     with open(step1_csv, 'r') as f:
