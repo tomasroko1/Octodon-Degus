@@ -13,8 +13,8 @@ import sys
 import time
 import argparse
 import pickle
+import csv
 import numpy as np
-import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -56,12 +56,13 @@ def run_step1(master_csv=None, master_mat=None, data_dir=None):
     # Cargar resultados previos para poder resumir si el script fue interrumpido
     if os.path.exists(csv_path):
         try:
-            df_old = pd.read_csv(csv_path)
+            with open(csv_path, 'r') as f:
+                reader = csv.DictReader(f)
+                results_list = list(reader)
+            
             if os.path.exists(pkl_path):
                 with open(pkl_path, 'rb') as f:
                     results_list = pickle.load(f)
-            else:
-                results_list = df_old.to_dict('records')
             
             completed_keys = set(r['Cell_ID'] for r in results_list)
             print(f"Cargados {len(completed_keys)} resultados previos. Continuando...")
@@ -165,8 +166,11 @@ def _save_results(results_list, csv_path, pkl_path):
         scalar_r = {k: v for k, v in r.items() if not str(k).startswith('_')}
         scalar_results.append(scalar_r)
         
-    df = pd.DataFrame(scalar_results)
-    df.to_csv(csv_path, index=False)
+    if scalar_results:
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=scalar_results[0].keys())
+            writer.writeheader()
+            writer.writerows(scalar_results)
     
     with open(pkl_path, 'wb') as f:
         pickle.dump(results_list, f)

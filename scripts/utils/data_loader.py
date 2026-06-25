@@ -202,16 +202,21 @@ def get_all_cell_ids(data_dir=None, master_csv=None, master_mat=None):
     si no, escanea los archivos .db_clnew en data_dir para autodetectarlas (modo local fallback).
     """
     import glob
-    import pandas as pd
+    import csv
     
     if data_dir is None:
         data_dir = DATA_DIR
         
     # 1. Leer de CSV si existe
     if master_csv is not None and os.path.exists(master_csv):
-        df = pd.read_csv(master_csv)
-        if 'Cell_ID' in df.columns:
-            return df['Cell_ID'].tolist()
+        cell_ids = []
+        with open(master_csv, 'r') as f:
+            reader = csv.DictReader(f)
+            if 'Cell_ID' in reader.fieldnames:
+                for row in reader:
+                    cell_ids.append(row['Cell_ID'])
+        if cell_ids:
+            return cell_ids
             
     # 2. Leer del .mat de MATLAB (ej. AllData2.db)
     if master_mat is not None and os.path.exists(master_mat):

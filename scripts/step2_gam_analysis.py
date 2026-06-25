@@ -15,7 +15,6 @@ import csv
 import contextlib
 import argparse
 import numpy as np
-import pandas as pd
 import time
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -164,14 +163,15 @@ def run_step2(data_dir=None):
         print("Debes correr 'python step1_viewpoint_analysis.py' primero.")
         return
         
-    df = pd.read_csv(step1_csv)
-    
-    # Filtrar celulas significativas y que hayan procesado con exito
-    if 'is_significant' in df.columns:
-        df_sig = df[(df['is_significant'] == True) & (df['status'] == 'success')]
-    else:
-        print("Advertencia: No se encontró la columna 'is_significant', se procesarán todas las exitosas.")
-        df_sig = df[df['status'] == 'success']
+    df_sig = []
+    with open(step1_csv, 'r') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # En CSV los booleanos se leen como strings 'True'/'False'
+            if row.get('is_significant') == 'True' and row.get('status') == 'success':
+                df_sig.append(row)
+            elif 'is_significant' not in row and row.get('status') == 'success':
+                df_sig.append(row)
         
     total = len(df_sig)
     print(f"Se encontraron {total} celulas significativas del Step 1 para procesar GAMs.")
@@ -197,13 +197,15 @@ def run_step2(data_dir=None):
             pass
             
     t0 = time.time()
-    for i, row in enumerate(df_sig.itertuples(), 1):
-        cell_id = row.Cell_ID
+    for i, row in enumerate(df_sig, 1):
+        cell_id = row['Cell_ID']
+        best_x = float(row['Best_X'])
+        best_y = float(row['Best_Y'])
         
         if cell_id in processed_cells:
             continue
             
-        res = process_cell(cell_id, row.Best_X, row.Best_Y, i, total, data_dir=data_dir)
+        res = process_cell(cell_id, best_x, best_y, i, total, data_dir=data_dir)
         if res:
             results.append(res)
             with open(out_csv, 'w', newline='') as f:
