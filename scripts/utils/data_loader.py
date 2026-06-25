@@ -14,8 +14,17 @@ import h5py
 import scipy.io as sio
 import numpy as np
 
+import glob
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-DATA_DIR = os.environ.get('DEGUS_DATA_DIR', os.path.join(BASE_DIR, 'data'))
+_local_data = os.path.join(BASE_DIR, 'data')
+_cluster_data = '/mnt/NAS/Degus/merged_files'
+
+if 'DEGUS_DATA_DIR' in os.environ:
+    DATA_DIR = os.environ['DEGUS_DATA_DIR']
+elif os.path.exists(_cluster_data):
+    DATA_DIR = _cluster_data
+else:
+    DATA_DIR = _local_data
 
 
 def _cargar_datos_neurona(sesion, tetrodo, neurona, db_merged_path, db_clnew_path):
