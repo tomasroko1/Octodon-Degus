@@ -1,23 +1,33 @@
-.agent/
-.gemini/
-.env
-.DS_Store
+# Python
 __pycache__/
-venv/
-papers/
-scratch/
-data/
-models/
-scripts/glm_analysis.py
-scripts/play_cv.py
-scripts/batch_analysis.py
-!README.md
-*.m
-*.pkl
-*.txt
-*.db
-*.db_clnew
-*.md
 *.py[cod]
 *$py.class
+*.so
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Data and Models
+data/
+models/
 results/
+figures/
+*.mat
+*.db
+*.db_clnew
+viewpoint_shuffling_results.mat
+
+# Jupyter
+.ipynb_checkpoints/

@@ -10,17 +10,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from pygam import PoissonGAM, te, s
-try:
-    from .data_loader import preparar_datos_posicion
-except ImportError:
-    from data_loader import preparar_datos_posicion
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MODELOS_DIR = os.path.join(BASE_DIR, 'models')
 
-def glm_position(sesion, tetrodo, neurona, n_bines=36, alpha=0.01):
+def glm_position(X, Y, n_bines=36, alpha=0.01, title=''):
     print("\n--- INICIANDO GLM ---")
-    X, Y = preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec=0.1)
     
     pos_x = X[:, 0]
     pos_y = X[:, 1]
@@ -71,16 +66,17 @@ def glm_position(sesion, tetrodo, neurona, n_bines=36, alpha=0.01):
     # le agregamos bordes negros para que los bines sean 100% distinguibles
     mesh = ax.pcolormesh(x_grid, y_grid, prediccion_pos, cmap='jet', shading='nearest', linewidth=0.5)
     fig.colorbar(mesh, ax=ax, label='Tasa de Disparo (Spikes/Bin)')
-    ax.set_title(f'GLM: {n_bines}x{n_bines} | s={sesion} t={tetrodo} c={neurona}')
+    ax.set_title(title or f'GLM: {n_bines}x{n_bines}')
     ax.axis('equal')
     
     plt.tight_layout()
     plt.show()
 
-def get_gam_posicion(sesion, tetrodo, neurona, splines, lam, bin_size_sec=0.1, force_retrain=False):
+    return modelo
+
+def get_gam_posicion(X, Y, cell_id, splines, lam, force_retrain=False):
     os.makedirs(MODELOS_DIR, exist_ok=True)
-    archivo_modelo = os.path.join(MODELOS_DIR, f'modelo_gam_pos_s{sesion}_t{tetrodo}_n{neurona}_sp{splines}.pkl')
-    X, Y = preparar_datos_posicion(sesion, tetrodo, neurona, bin_size_sec)
+    archivo_modelo = os.path.join(MODELOS_DIR, f'modelo_gam_pos_{cell_id}_sp{splines}.pkl')
     
     if os.path.exists(archivo_modelo) and not force_retrain:
         print(f"[+] Cargando GAM Posición guardado desde {archivo_modelo}...")
@@ -88,39 +84,21 @@ def get_gam_posicion(sesion, tetrodo, neurona, splines, lam, bin_size_sec=0.1, f
             modelo_gam = pickle.load(f)
     else:
         print(f"[-] Entrenando GAM Posición ({splines}x{splines} splines)...")
-        
-        #modelo_gam = PoissonGAM(te(0, 1, n_splines=splines)).gridsearch(X, Y, progress=False)
-
-        # Evitamos usar .gridsearch() que usa GCV (Generalized Cross Validation)
-        # para s 2 3 3 obtuvo los mismos valores de lambda que los que fueron
-        # obtenidos cross-validando
-        # Ya que tenemos el lambda cross-validado -> evitamos el GCV innecesario 
-        
         modelo_gam = PoissonGAM(te(0, 1, n_splines=splines, lam=lam)).fit(X, Y)
-
-
-        ## queremos calcular el error del gam. por ejemplo compararlo con el glm, la prediccion
-        ## de spikes (media, depende del tiempo. no fija) contra los spikes reales (realizacion)
-
-
-        ## agregar grafico gam2 tambien para glm y comparar
-
-        ## queremos asegurarnos de que esto este crossvalidando bien -> croosvalidar por segmento en la linea temporal
 
         with open(archivo_modelo, 'wb') as f:
             pickle.dump(modelo_gam, f)
             
     print("\n=== RESUMEN GAM POSICIÓN ===")
     modelo_gam.summary()
-    return modelo_gam, X, Y
+    return modelo_gam
 
-def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, bin_size_sec=0.1):
+def graficar_gam_posicion(modelo_gam, X, Y, title='', bin_size_sec=0.1):
     print("\n--- GRAFICANDO GAM ---")
     
     # 1. Definimos una resolución alta (n=100) para un renderizado muy suave
     n_res = 100 
     XX_pos = modelo_gam.generate_X_grid(term=0, n=n_res)
-    #Z_pos = np.exp(modelo_gam.partial_dependence(term=0, X=XX_pos))
     Z_pos = modelo_gam.predict(XX_pos)
 
     # 2. Obligatorio para contourf: Convertir las listas planas en matrices 2D (100x100)
@@ -144,12 +122,11 @@ def graficar_gam_posicion(modelo_gam, X, Y, sesion, tetrodo, neurona, splines, b
     ax.set_facecolor('white')
     mesh = ax.pcolormesh(x_grid, y_grid, z_grid, cmap='jet', shading='nearest')
     fig.colorbar(mesh, ax=ax, label='Tasa de Disparo (Spikes/Bin)')
-    ax.set_title(f'GAM Model | s={sesion} t={tetrodo} c={neurona}')
+    ax.set_title(title or 'GAM Model')
     ax.set_aspect('equal')
     ax.axis('off')
     
     ## 2do plot
-
     prediccion_tiempo = modelo_gam.predict(X)
     
     fig2 = plt.figure(figsize=(12, 4))

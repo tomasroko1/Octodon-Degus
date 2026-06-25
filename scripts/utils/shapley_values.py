@@ -2,7 +2,7 @@ import numpy as np
 import math
 import itertools
 import matplotlib.pyplot as plt
-from scripts.utils.cross_validation import (
+from .cross_validation import (
     cross_validate_gam_grid, 
     retrain_best_gam, 
     null_model_nll, 

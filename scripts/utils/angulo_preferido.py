@@ -1,113 +1,15 @@
 import numpy as np
 
-def calcular_angulo_preferido_coseno(angulos_reales, spikes, tiempos_bin, tolerancia_deg=30):
-    """
-    Calcula el ángulo preferido y amplitud.
-    """
-    angulos_candidatos = np.arange(0, 360, 10)
-    delta_R = []
-    
-    for theta in angulos_candidatos:
-        diff_angular = np.abs((angulos_reales - theta + 180) % 360 - 180)
-        
-        mira_hacia = diff_angular <= tolerancia_deg
-        no_mira_hacia = ~mira_hacia
-        
-        if np.sum(mira_hacia) > 0 and np.sum(no_mira_hacia) > 0:
-            rate_mira = np.sum(spikes[mira_hacia]) / (np.sum(mira_hacia) * tiempos_bin)
-            rate_no_mira = np.sum(spikes[no_mira_hacia]) / (np.sum(no_mira_hacia) * tiempos_bin)
-            delta_R.append(rate_mira - rate_no_mira)
-        else:
-            delta_R.append(0.0)
-            
-    delta_R = np.array(delta_R)
-    
-    rad_cand = np.radians(angulos_candidatos)
-    projection = 2.0 * np.mean(delta_R * np.exp(1j * rad_cand))
-    
-    amplitud_optima = np.abs(projection)
-    angulo_preferido_deg = np.degrees(np.angle(projection)) % 360
-    baseline = np.mean(delta_R)
-    
-    funcion = lambda x: amplitud_optima * np.cos(np.radians(x) - np.radians(angulo_preferido_deg)) + baseline
-    
-    return angulos_candidatos, delta_R, amplitud_optima, angulo_preferido_deg, baseline, funcion   
 
-
-def evaluar_confianza_angulo_preferido(angulos_reales, spikes, tiempos_bin, tolerancia_deg=30, 
-                                       n_shifts=100, min_shift_sec=10.0):
+def _setup_viewpoint_grid(x_bins, y_bins, ang_bins_rad, grid_res=20, grid_extent=None):
     """
-    Evalúa la confianza estadística de la sintonización de Head Direction mediante spike shifting
-    utilizando el método de proyección lineal compleja.
-    """
-    ang_cand, delta_R, original_amp, original_angle, baseline, _ = calcular_angulo_preferido_coseno(
-        angulos_reales, spikes, tiempos_bin, tolerancia_deg
-    )
+    Construye la grilla 2D de puntos candidatos y calcula el ángulo corregido
+    (head direction relativa al punto) para cada bin temporal y cada punto de la grilla.
     
-    angulos_candidatos = np.arange(0, 360, 10)
-    rad_cand = np.radians(angulos_candidatos)
-    
-    angle_masks = []
-    for theta in angulos_candidatos:
-        diff_angular = np.abs((angulos_reales - theta + 180) % 360 - 180)
-        mira_hacia = diff_angular <= tolerancia_deg
-        sum_mira = np.sum(mira_hacia)
-        sum_no_mira = np.sum(~mira_hacia)
-        angle_masks.append((mira_hacia, ~mira_hacia, sum_mira, sum_no_mira))
-        
-    min_shift_bins = int(np.ceil(min_shift_sec / tiempos_bin))
-    L = len(spikes)
-    if L < 2 * min_shift_bins:
-        raise ValueError("Sesión muy corta para el shift mínimo.")
-        
-    shuffled_amplitudes = []
-    
-    rng = np.random.default_rng(42)
-    valid_shifts = rng.integers(min_shift_bins, L - min_shift_bins, size=n_shifts)
-    
-    for s in valid_shifts:
-        spikes_shuffled = np.roll(spikes, s)
-        delta_R_shuff = []
-        
-        for mira_hacia, no_mira_hacia, sum_mira, sum_no_mira in angle_masks:
-            if sum_mira > 0 and sum_no_mira > 0:
-                rate_mira = np.sum(spikes_shuffled[mira_hacia]) / (sum_mira * tiempos_bin)
-                rate_no_mira = np.sum(spikes_shuffled[no_mira_hacia]) / (sum_no_mira * tiempos_bin)
-                delta_R_shuff.append(rate_mira - rate_no_mira)
-            else:
-                delta_R_shuff.append(0.0)
-                
-        delta_R_shuff = np.array(delta_R_shuff)
-        
-        # Proyección lineal compleja
-        shuff_proj = 2.0 * np.mean(delta_R_shuff * np.exp(1j * rad_cand))
-        shuffled_amplitudes.append(np.abs(shuff_proj))
-        
-    shuffled_amplitudes = np.array(shuffled_amplitudes)
-    
-    p_value = np.sum(shuffled_amplitudes >= original_amp) / n_shifts
-    mean_shuff = np.mean(shuffled_amplitudes)
-    std_shuff = np.std(shuffled_amplitudes) if np.std(shuffled_amplitudes) > 0 else 1e-6
-    z_score = (original_amp - mean_shuff) / std_shuff
-    confianza_significativa = (p_value < 0.05) or (z_score > 1.96)
-    
-    return {
-        'original_amplitude': original_amp,
-        'original_angle': original_angle,
-        'mean_shuffled_amplitude': mean_shuff,
-        'std_shuffled_amplitude': std_shuff,
-        'shuffled_amplitudes': shuffled_amplitudes,
-        'p_value': p_value,
-        'z_score': z_score,
-        'confianza_significativa': confianza_significativa
-    }
-
-
-def analizar_sintonizacion_perspectiva_continua(x_bins, y_bins, ang_bins_rad, spikes, tiempos_bin,
-                                               grid_res=20, sigma_hd_deg=17.2, grid_extent=None):
-    """
-    Calcula la sintonización de perspectiva circular continua.
-    Identifica el punto óptimo de referencia en una grilla 2D del entorno.
+    Returns:
+        XX, YY: matrices de la grilla (grid_res x grid_res)
+        X_flat, Y_flat: coordenadas aplanadas de los puntos de la grilla
+        hd_corrected: matriz (N_bins x M_points) con el ángulo corregido en [0, 2*pi)
     """
     if grid_extent is None:
         x_min, x_max = np.min(x_bins) - 10, np.max(x_bins) + 10
@@ -120,12 +22,25 @@ def analizar_sintonizacion_perspectiva_continua(x_bins, y_bins, ang_bins_rad, sp
     XX, YY = np.meshgrid(x_grid, y_grid)
     X_flat = XX.flatten()
     Y_flat = YY.flatten()
-    M_points = len(X_flat)
     
     dy = Y_flat[np.newaxis, :] - y_bins[:, np.newaxis]
     dx = X_flat[np.newaxis, :] - x_bins[:, np.newaxis]
     ang_hacia_punto = np.arctan2(dy, dx)
     hd_corrected = np.mod(ang_bins_rad[:, np.newaxis] - ang_hacia_punto, 2 * np.pi)
+    
+    return XX, YY, X_flat, Y_flat, hd_corrected
+
+
+def analizar_sintonizacion_perspectiva_continua(x_bins, y_bins, ang_bins_rad, spikes, tiempos_bin,
+                                                grid_res=20, sigma_hd_deg=17.2, grid_extent=None):
+    """
+    Calcula la sintonización de perspectiva circular continua.
+    Identifica el punto óptimo de referencia en una grilla 2D del entorno.
+    """
+    XX, YY, X_flat, Y_flat, hd_corrected = _setup_viewpoint_grid(
+        x_bins, y_bins, ang_bins_rad, grid_res, grid_extent
+    )
+    M_points = len(X_flat)
     
     N_hdbins = 36
     hdbins = np.linspace(0, 2 * np.pi, N_hdbins, endpoint=False)
@@ -202,23 +117,10 @@ def evaluar_confianza_sintonizacion_perspectiva(x_bins, y_bins, ang_bins_rad, sp
     if L < 2 * min_shift_bins:
         raise ValueError("Sesión muy corta para el shift mínimo.")
         
-    if grid_extent is None:
-        x_min, x_max = np.min(x_bins) - 10, np.max(x_bins) + 10
-        y_min, y_max = np.min(y_bins) - 10, np.max(y_bins) + 10
-    else:
-        x_min, x_max, y_min, y_max = grid_extent
-        
-    x_grid = np.linspace(x_min, x_max, grid_res)
-    y_grid = np.linspace(y_min, y_max, grid_res)
-    XX, YY = np.meshgrid(x_grid, y_grid)
-    X_flat = XX.flatten()
-    Y_flat = YY.flatten()
+    XX, YY, X_flat, Y_flat, hd_corrected = _setup_viewpoint_grid(
+        x_bins, y_bins, ang_bins_rad, grid_res, grid_extent
+    )
     M_points = len(X_flat)
-    
-    dy = Y_flat[np.newaxis, :] - y_bins[:, np.newaxis]
-    dx = X_flat[np.newaxis, :] - x_bins[:, np.newaxis]
-    ang_hacia_punto = np.arctan2(dy, dx)
-    hd_corrected = np.mod(ang_bins_rad[:, np.newaxis] - ang_hacia_punto, 2 * np.pi)
     
     N_hdbins = 36
     hdbins = np.linspace(0, 2 * np.pi, N_hdbins, endpoint=False)
