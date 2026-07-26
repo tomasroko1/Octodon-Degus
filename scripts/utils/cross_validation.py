@@ -188,11 +188,17 @@ def find_optimal_lambda_dynamic(X, Y, folds, n_splines, model_type="pos", lam_st
             lam_pos, lam_view, lam_hd, lam_dist = _unpack_lambdas(lam_actual, model_type)
             formula = _build_gam_formula(model_type, n_splines, lam_pos, lam_view, lam_hd, lam_dist)
                 
-            modelo = PoissonGAM(formula).fit(X_train, Y_train)
-            
-            nll_val = -modelo.loglikelihood(X_test, Y_test) / len(Y_test)
+            try:
+                modelo = PoissonGAM(formula).fit(X_train, Y_train)
+                nll_val = -modelo.loglikelihood(X_test, Y_test) / len(Y_test)
+                edof_val = modelo.statistics_['edof']
+            except Exception as e:
+                # Fallos por matriz singular o inestabilidad numérica
+                nll_val = np.inf
+                edof_val = np.nan
+                
             errores_test_cv.append(nll_val)
-            edofs_cv.append(modelo.statistics_['edof'])
+            edofs_cv.append(edof_val)
             
         nll_medio = np.mean(errores_test_cv)
         edof_medio = np.mean(edofs_cv)
@@ -251,11 +257,16 @@ def cross_validate_gam_grid(X, Y, folds, splines_grid, lambdas_grid, model_type=
                 lam_pos, lam_view, lam_hd, lam_dist = _unpack_lambdas(lam, model_type)
                 formula = _build_gam_formula(model_type, n_splines, lam_pos, lam_view, lam_hd, lam_dist)
                 
-                modelo = PoissonGAM(formula).fit(X_train, Y_train)
-                
-                nll_val = -modelo.loglikelihood(X_test, Y_test) / len(Y_test)
+                try:
+                    modelo = PoissonGAM(formula).fit(X_train, Y_train)
+                    nll_val = -modelo.loglikelihood(X_test, Y_test) / len(Y_test)
+                    edof_val = modelo.statistics_['edof']
+                except Exception as e:
+                    nll_val = np.nan
+                    edof_val = np.nan
+                    
                 errores_test_cv.append(nll_val)
-                edofs_cv.append(modelo.statistics_['edof'])
+                edofs_cv.append(edof_val)
                 
             nll_medio = np.mean(errores_test_cv)
             nll_std = np.std(errores_test_cv)

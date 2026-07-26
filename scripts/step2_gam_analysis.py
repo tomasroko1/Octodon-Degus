@@ -52,9 +52,9 @@ def process_cell(cell_id, best_x, best_y, current_idx, total_cells, data_dir=Non
     ang_bins_rad = ang_bins_rad[valid_mask]
     spikes = spikes[valid_mask]
 
-    if len(spikes) < 100:
-        print(f"Omitiendo {cell_id} por no tener suficientes datos válidos.")
-        return None
+    if len(spikes) < 100 or np.sum(spikes) < 10:
+        print(f"Omitiendo {cell_id} por no tener suficientes datos válidos o spikes ({np.sum(spikes)}).")
+        return { 'Cell_ID': cell_id, 'Status': 'skipped_low_spikes' }
 
     # Computar Viewpoint
     dy = best_y - y_bins
@@ -84,42 +84,46 @@ def process_cell(cell_id, best_x, best_y, current_idx, total_cells, data_dir=Non
     Y_held = spikes[held_out_idx]
     
     # Búsqueda dinámica de lambda
-    with open(os.devnull, 'w') as f_null:
-        with contextlib.redirect_stdout(f_null):
-            lam_pos, edof_pos, _, _ = find_optimal_lambda_dynamic(
-                X_pos, spikes, folds, n_splines=9, model_type="pos", lam_start=1e-3
-            )
-            lam_view, edof_view, _, _ = find_optimal_lambda_dynamic(
-                X_view, spikes, folds, n_splines=9, model_type="view_angle", lam_start=1e-3
-            )
-            lam_hd, edof_hd, _, _ = find_optimal_lambda_dynamic(
-                X_hd, spikes, folds, n_splines=9, model_type="hd", lam_start=1e-3
-            )
-            lam_pos_view, edof_pos_view, _, _ = find_optimal_lambda_dynamic(
-                X_pos_view, spikes, folds, n_splines=9, model_type="pos_view_angle", lam_start=[lam_pos, lam_view]
-            )
-            
-    # Re-entrenar modelos sobre el train pool
-    modelo_pos = retrain_best_gam(X_pool[:, [0, 1]], Y_pool, 9, lam_pos, model_type="pos")
-    modelo_view = retrain_best_gam(X_pool[:, [2]], Y_pool, 9, lam_view, model_type="view_angle")
-    modelo_hd = retrain_best_gam(X_pool[:, [4]], Y_pool, 9, lam_hd, model_type="hd")
-    modelo_pos_view = retrain_best_gam(X_pool[:, [0, 1, 2]], Y_pool, 9, lam_pos_view, model_type="pos_view_angle")
-    
-    # Evaluar NLL final en held-out
-    nll_pos = poisson_nll_per_sample(Y_held, modelo_pos.predict(X_held[:, [0, 1]]))
-    nll_view = poisson_nll_per_sample(Y_held, modelo_view.predict(X_held[:, [2]]))
-    nll_hd = poisson_nll_per_sample(Y_held, modelo_hd.predict(X_held[:, [4]]))
-    nll_pos_view = poisson_nll_per_sample(Y_held, modelo_pos_view.predict(X_held[:, [0, 1, 2]]))
-    
-    null_nll = null_model_nll(Y_pool, Y_held)
-    
-    pos_r2 = pseudo_r2_mcfadden(nll_pos, null_nll)
-    view_r2 = pseudo_r2_mcfadden(nll_view, null_nll)
-    hd_r2 = pseudo_r2_mcfadden(nll_hd, null_nll)
-    pos_view_r2 = pseudo_r2_mcfadden(nll_pos_view, null_nll)
-    
-    shapley_pos = 0.5 * pos_r2 + 0.5 * (pos_view_r2 - view_r2)
-    shapley_view = 0.5 * view_r2 + 0.5 * (pos_view_r2 - pos_r2)
+    try:
+        with open(os.devnull, 'w') as f_null:
+            with contextlib.redirect_stdout(f_null):
+                lam_pos, edof_pos, _, _ = find_optimal_lambda_dynamic(
+                    X_pos, spikes, folds, n_splines=9, model_type="pos", lam_start=1e-3
+                )
+                lam_view, edof_view, _, _ = find_optimal_lambda_dynamic(
+                    X_view, spikes, folds, n_splines=9, model_type="view_angle", lam_start=1e-3
+                )
+                lam_hd, edof_hd, _, _ = find_optimal_lambda_dynamic(
+                    X_hd, spikes, folds, n_splines=9, model_type="hd", lam_start=1e-3
+                )
+                lam_pos_view, edof_pos_view, _, _ = find_optimal_lambda_dynamic(
+                    X_pos_view, spikes, folds, n_splines=9, model_type="pos_view_angle", lam_start=[lam_pos, lam_view]
+                )
+                
+        # Re-entrenar modelos sobre el train pool
+        modelo_pos = retrain_best_gam(X_pool[:, [0, 1]], Y_pool, 9, lam_pos, model_type="pos")
+        modelo_view = retrain_best_gam(X_pool[:, [2]], Y_pool, 9, lam_view, model_type="view_angle")
+        modelo_hd = retrain_best_gam(X_pool[:, [4]], Y_pool, 9, lam_hd, model_type="hd")
+        modelo_pos_view = retrain_best_gam(X_pool[:, [0, 1, 2]], Y_pool, 9, lam_pos_view, model_type="pos_view_angle")
+        
+        # Evaluar NLL final en held-out
+        nll_pos = poisson_nll_per_sample(Y_held, modelo_pos.predict(X_held[:, [0, 1]]))
+        nll_view = poisson_nll_per_sample(Y_held, modelo_view.predict(X_held[:, [2]]))
+        nll_hd = poisson_nll_per_sample(Y_held, modelo_hd.predict(X_held[:, [4]]))
+        nll_pos_view = poisson_nll_per_sample(Y_held, modelo_pos_view.predict(X_held[:, [0, 1, 2]]))
+        
+        null_nll = null_model_nll(Y_pool, Y_held)
+        
+        pos_r2 = pseudo_r2_mcfadden(nll_pos, null_nll)
+        view_r2 = pseudo_r2_mcfadden(nll_view, null_nll)
+        hd_r2 = pseudo_r2_mcfadden(nll_hd, null_nll)
+        pos_view_r2 = pseudo_r2_mcfadden(nll_pos_view, null_nll)
+        
+        shapley_pos = 0.5 * pos_r2 + 0.5 * (pos_view_r2 - view_r2)
+        shapley_view = 0.5 * view_r2 + 0.5 * (pos_view_r2 - pos_r2)
+    except Exception as e:
+        print(f"Error entrenando GAM para {cell_id}: {e}")
+        return { 'Cell_ID': cell_id, 'Status': f'error_gam_{type(e).__name__}' }
             
     if isinstance(lam_pos_view, (list, tuple)):
         lam_pos_view_str = f"{lam_pos_view[0]:.4g};{lam_pos_view[1]:.4g}"
@@ -134,6 +138,7 @@ def process_cell(cell_id, best_x, best_y, current_idx, total_cells, data_dir=Non
     
     return {
         'Cell_ID': cell_id,
+        'Status': 'success',
         'Best_X': best_x,
         'Best_Y': best_y,
         'Null_NLL': null_nll,
@@ -216,8 +221,15 @@ def run_step2(data_dir=None):
         res = process_cell(cell_id, best_x, best_y, i, total, data_dir=data_dir)
         if res:
             results.append(res)
+            # Para que DictWriter no falle si el dict res tiene solo 'Cell_ID' y 'Status'
+            # y 'results[-1]' (que puede ser exitoso) tiene mas keys.
+            # Escribimos los fieldnames acumulando las keys descubiertas o con un dict de fallback.
+            all_keys = set()
+            for r in results:
+                all_keys.update(r.keys())
+            
             with open(out_csv, 'w', newline='') as f:
-                writer = csv.DictWriter(f, fieldnames=results[-1].keys())
+                writer = csv.DictWriter(f, fieldnames=list(all_keys), extrasaction='ignore')
                 writer.writeheader()
                 writer.writerows(results)
             

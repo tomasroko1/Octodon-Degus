@@ -9,12 +9,24 @@
 % Agregar el directorio de funciones auxiliares al path de MATLAB
 addpath(fullfile('..', 'reference', 'matlab'));
 
-fpath = '/mnt/NAS/Degus/merged_files/';
-load('/mnt/NAS/Mati/MATLAB/2019-20 _ Degus/Degus-2020-Mati/AllData2.db', '-mat');
+fpath = getenv('DEGUS_DATA_DIR');
+if isempty(fpath)
+    fpath = '/mnt/NAS/Degus/merged_files/';
+end
+
+db_path = getenv('DEGUS_DB_PATH');
+if isempty(db_path)
+    db_path = '/mnt/NAS/Mati/MATLAB/2019-20 _ Degus/Degus-2020-Mati/AllData2.db';
+end
+
+try
+    load(db_path, '-mat');
+catch err
+    error('Could not load database file %s: %s', db_path, err.message);
+end
 close all;
 
-% Filtrar solo sesiones de Open Field
-data = data(contains(data(:,2), 'OF'), :);
+% Procesamos TODAS las células en la base de datos (se removió filtro OF)
 N = size(data, 1);
 
 % --- Parámetros del análisis ---
@@ -47,7 +59,7 @@ status         = cell(N, 1);
 cell_ids       = cell(N, 1);
 
 fprintf('==========================================================\n');
-fprintf(' Iniciando Step 1: %d células de Open Field\n', N);
+fprintf(' Iniciando Step 1: %d células encontradas\n', N);
 fprintf(' Guardando en: %s\n', save_path);
 fprintf('==========================================================\n\n');
 
@@ -58,16 +70,15 @@ for j = 1:N
     
     try
         % ---- Extraer identificadores de la tabla ----
-        tokens = regexp(data{j,2}, 'OF-([IVXLCDM]+)', 'tokens');
         degu = data{j,1};
-        sess_roman = tokens{1}{1};
+        session_str = data{j,2}; % ej. 'OF-V', 'LT-I'
         tet = str2double(data{j,4});
         cl  = data{j,5};
         
-        cell_ids{j} = sprintf('%s-OF-%s_T%s_N%s', degu, sess_roman, num2str(data{j,4}), num2str(cl));
+        cell_ids{j} = sprintf('%s-%s_T%s_N%s', degu, session_str, num2str(data{j,4}), num2str(cl));
         
-        % ---- Cargar datos (iterador original de MATLAB) ----
-        [pos, spk, ~, ~] = get_OF_data(degu, sess_roman, tet, cl);
+        % ---- Cargar datos genéricos (usando época más larga) ----
+        [pos, spk, ~] = get_generic_data(degu, session_str, tet, cl);
         
         % ---- Preprocesamiento ----
         x  = pos.x(:) - min(pos.x);
