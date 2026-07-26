@@ -38,9 +38,22 @@ echo "----------------------------------------------------------"
 # Move to scripts directory to run MATLAB
 cd "$(dirname "$0")"
 
+# Detect MATLAB executable
+if command -v matlab >/dev/null 2>&1; then
+    MATLAB_EXEC="matlab"
+elif [ -x "/usr/local/MATLAB/R2017a/bin/matlab" ]; then
+    MATLAB_EXEC="/usr/local/MATLAB/R2017a/bin/matlab"
+elif [ -x "/opt/MATLAB/R2017a/bin/matlab" ]; then
+    MATLAB_EXEC="/opt/MATLAB/R2017a/bin/matlab"
+else
+    echo "[ERROR] MATLAB command not found in PATH and R2017a is not in standard paths."
+    echo "Please run 'module load matlab' or add it to your PATH."
+    exit 1
+fi
+
 # Execute MATLAB script without opening the GUI
 # -batch flag requires R2019b or later, for older use -nodisplay -r "step1_viewpoint_analysis; exit"
-matlab -nodisplay -nosplash -nodesktop -r "try, run('step1_viewpoint_analysis.m'), catch e, disp(getReport(e)), exit(1), end, exit(0)"
+$MATLAB_EXEC -nodisplay -nosplash -nodesktop -r "try, run('step1_viewpoint_analysis.m'), catch e, disp(getReport(e)), exit(1), end, exit(0)"
 
 # Verify MATLAB output exists
 if [ ! -f "../results/viewpoint_results.mat" ] && [ ! -f "../results/viewpoint_results.csv" ]; then
