@@ -65,6 +65,14 @@ for j = 1:N
         % ---- Extraer identificadores de la tabla ----
         degu = data{j,1};
         session_str = data{j,2}; % ej. 'OF-V', 'LT-I'
+        
+        % Ignorar células que no sean de Open Field o Novel Location
+        if ~strncmp(session_str, 'OF', 2) && ~strncmp(session_str, 'NL', 2)
+            fprintf('Saltada: sesión %s no es 2D\n', session_str);
+            status{j} = 'skipped_non_2d';
+            continue;
+        end
+        
         tet = str2double(data{j,4});
         cl  = data{j,5};
         
