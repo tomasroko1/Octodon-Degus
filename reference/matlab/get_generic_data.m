@@ -7,15 +7,8 @@ function [pos, spk, selected_epoch] = get_generic_data(degu, session_str, tet, c
 %   tet         - Entero con el número de tetrodo
 %   cl          - Entero con el número de clúster (neurona)
 
-    % Leer directorio de datos de la variable de entorno, con fallback
-    data_dir = getenv('DEGUS_DATA_DIR');
-    if isempty(data_dir)
-        if exist('/mnt/NAS/Degus/merged_files/', 'dir')
-            data_dir = '/mnt/NAS/Degus/merged_files/';
-        else
-            data_dir = fullfile('..', 'data');
-        end
-    end
+    % Usar la ruta original del servidor
+    data_dir = '/mnt/NAS/Degus/merged_files/';
     
     merge_file = fullfile(data_dir, sprintf('S2020_Mark%s-%s_merged.db', degu, session_str));
     sorting_file = fullfile(data_dir, sprintf('S2020_Mark%s-%s.db_clnew', degu, session_str));

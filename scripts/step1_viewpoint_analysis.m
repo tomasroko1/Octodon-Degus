@@ -9,15 +9,8 @@
 % Agregar el directorio de funciones auxiliares al path de MATLAB
 addpath(fullfile('..', 'reference', 'matlab'));
 
-fpath = getenv('DEGUS_DATA_DIR');
-if isempty(fpath)
-    fpath = '/mnt/NAS/Degus/merged_files/';
-end
-
-db_path = getenv('DEGUS_DB_PATH');
-if isempty(db_path)
-    db_path = '/mnt/NAS/Mati/MATLAB/2019-20 _ Degus/Degus-2020-Mati/AllData2.db';
-end
+fpath = '/mnt/NAS/Degus/merged_files/';
+db_path = '/mnt/NAS/Mati/MATLAB/2019-20 _ Degus/Degus-2020-Mati/AllData2.db';
 
 try
     load(db_path, '-mat');
