@@ -169,7 +169,7 @@ def generate_all_splits(n_muestras, bin_size_sec, block_size_sec=60, n_folds=5, 
     return folds, held_out_final, train_pool_final, roles
 
 
-def find_optimal_lambda_dynamic(X, Y, folds, n_splines, model_type="pos", lam_start=1e-3, factor=1.5, max_steps=100, patience=3):
+def find_optimal_lambda_dynamic(X, Y, folds, n_splines, model_type="pos", lam_start=1e-3, factor=1.5, max_steps=100, patience=3, max_lam=10000.0):
     mejor_nll = float('inf')
     mejor_lam = None
     mejor_edof = None
@@ -217,8 +217,12 @@ def find_optimal_lambda_dynamic(X, Y, folds, n_splines, model_type="pos", lam_st
             
         if isinstance(lam_actual, (list, tuple)):
             lam_actual = [lam * factor for lam in lam_actual]
+            if any(l > max_lam for l in lam_actual):
+                break
         else:
             lam_actual *= factor
+            if lam_actual > max_lam:
+                break
         
     return mejor_lam, mejor_edof, mejor_nll, resultados_busqueda
 
