@@ -154,8 +154,10 @@ def load_cell_data(cell_id, data_dir=None, bin_size_sec=0.1):
 
     epoch = None
     max_len = 0
-    for k in ['pos_1', 'pos_2', 'pos_3']:
-        if k in file and len(file[k]['x'][0].shape) > 0:
+    # Buscar dinámicamente todas las épocas pos_X que existan en el archivo
+    pos_keys = [k for k in file.keys() if k.startswith('pos_')]
+    for k in pos_keys:
+        if len(file[k]['x'][0].shape) > 0:
             if file[k]['x'][0].shape[0] > max_len:
                 max_len = file[k]['x'][0].shape[0]
                 epoch = int(k.split('_')[1])
