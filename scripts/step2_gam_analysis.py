@@ -166,16 +166,14 @@ def run_step2(data_dir=None):
     step1_csv = os.path.join(RESULTS_DIR, 'viewpoint_results.csv')
     step1_mat = os.path.join(RESULTS_DIR, 'viewpoint_results.mat')
     
-    if not os.path.exists(step1_csv):
-        if os.path.exists(step1_mat):
-            print("Detectado output de MATLAB. Convirtiendo a CSV automáticamente...")
-            if not convert_mat_to_csv(step1_mat, step1_csv):
-                return
-        else:
-            print(f"Error: No se encontró el output del Step 1 en {step1_mat} ni {step1_csv}")
-            print("Debes correr 'step1_viewpoint_analysis.m' en MATLAB primero.")
+    if os.path.exists(step1_mat):
+        print("Convirtiendo (o actualizando) output de MATLAB a CSV...")
+        if not convert_mat_to_csv(step1_mat, step1_csv):
             return
-        
+    elif not os.path.exists(step1_csv):
+        print(f"Error: No se encontró el output del Step 1 en {step1_mat} ni {step1_csv}")
+        print("Debes correr 'step1_viewpoint_analysis.m' en MATLAB primero.")
+        return
     df_sig = []
     with open(step1_csv, 'r') as f:
         reader = csv.DictReader(f)
