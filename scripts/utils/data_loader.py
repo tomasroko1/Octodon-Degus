@@ -241,12 +241,12 @@ def get_all_cell_ids(data_dir=None, master_csv=None, master_mat=None):
                 data_table = mat['data']
                 cell_ids = []
                 for row in data_table:
-                    if 'OF' in str(row[1]):
+                    session_str = str(row[1])
+                    if session_str.startswith('OF') or session_str.startswith('NL'):
                         degu = str(row[0])
-                        sess_roman = str(row[1]).split('-')[-1]
                         tet = str(row[3])
                         cl = str(row[4])
-                        cell_ids.append(f"{degu}-OF-{sess_roman}_T{tet}_N{cl}")
+                        cell_ids.append(f"{degu}-{session_str}_T{tet}_N{cl}")
                 return cell_ids
         except Exception as e:
             print(f"Error leyendo {master_mat}: {e}")
